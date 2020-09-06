@@ -1,0 +1,5 @@
+# this must be executed with `bash indigo_env_setup` from root project directory
+# to give python file access to indigo libs when building
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:"$PWD/indigo/indigo_libs/"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/indigo/build/lib"

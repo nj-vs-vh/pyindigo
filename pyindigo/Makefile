@@ -17,12 +17,10 @@ else
 	endif
 endif
 
-all: dynamic_driver_client
-
-dynamic_driver_client: dynamic_driver_client.c
+pyindigo_client: pyindigo_client.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 .PHONY: clean
 
 clean:
-	rm executable_driver_client dynamic_driver_client remote_server_client
+	rm pyindigo_client
