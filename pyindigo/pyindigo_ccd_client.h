@@ -5,3 +5,5 @@
 extern char *ccd_device_name;
 
 extern indigo_client ccd_client;
+
+void set_ccd_image_processing_callback(void (*callback)(const void *start, size_t size));

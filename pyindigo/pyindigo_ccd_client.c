@@ -32,8 +32,6 @@
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
-#include "_pyindigo.h"
-
 static bool device_connected = false;
 
 char *ccd_device_name;
@@ -70,6 +68,16 @@ static indigo_result ccd_client_define_property(indigo_client *client, indigo_de
 	return INDIGO_OK;
 }
 
+
+void (*ccd_image_processing_callback)(const void *start, size_t size);
+
+
+void set_ccd_image_processing_callback(void (*callback)(const void *start, size_t size))
+{
+	ccd_image_processing_callback = callback;
+}
+
+
 static indigo_result ccd_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
 	if (strcmp(property->device, ccd_device_name))
 		return INDIGO_OK;
@@ -92,7 +100,7 @@ static indigo_result ccd_client_update_property(indigo_client *client, indigo_de
 			// FILE *f = fopen("test_img.fits", "wb");
 			// fwrite(property->items[0].blob.value, property->items[0].blob.size, 1, f);
 			// fclose(f);
-			process_ccd_shot_with_python_callback(property->items[0].blob.value, property->items[0].blob.size);
+			ccd_image_processing_callback(property->items[0].blob.value, property->items[0].blob.size);
 			indigo_log("image saved!");
 		}
 	}
@@ -102,6 +110,7 @@ static indigo_result ccd_client_update_property(indigo_client *client, indigo_de
 	// 	} else if (property->state == INDIGO_OK_STATE) {
 	// 		indigo_log("exposure done...");
 	// 	}
+
 	// 	return INDIGO_OK;
 	// }
 	return INDIGO_OK;

@@ -1,26 +1,23 @@
 DEBUG_BUILD = -g
-INDIGO_ROOT = ../indigo
+INDIGO_ROOT = /home/njvh/Documents/Science/sphere/camera-server/indigo
 BUILD_ROOT = $(INDIGO_ROOT)/build
 BUILD_LIB = $(BUILD_ROOT)/lib
 
-ifeq ($(OS),Windows_NT)
-	OS_DETECTED = Windows
-else
-	OS_DETECTED = $(shell uname -s)
-	ifeq ($(OS_DETECTED),Darwin)
-		CFLAGS = $(DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_MACOS
-		LDFLAGS = -L$(BUILD_LIB) -lindigo
-	endif
-	ifeq ($(OS_DETECTED),Linux)
-		CFLAGS = $(DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_LINUX
-		LDFLAGS = -L$(BUILD_LIB) -lindigo
-	endif
-endif
 
-pyindigo_client: pyindigo_client.c
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+CFLAGS = $(DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_LINUX
+LDFLAGS = -L$(BUILD_LIB) -lindigo
 
-.PHONY: clean
 
-clean:
-	rm pyindigo_client
+all: | build_object_file create_shared_library
+
+
+TEMP_O_FILE = ./bin/pyindigo_ccd_client.o
+
+# mkdir bin && cd bin && mkdir shared && cd ..
+
+# delete -c ???
+build_object_file: pyindigo_ccd_client.c
+	gcc -c -fPIC $^ -o ${TEMP_O_FILE} $(CFLAGS) $(LDFLAGS)
+
+create_shared_library:
+	gcc -shared ${TEMP_O_FILE} -o ./bin/shared/libpyindigo_ccd_client.so

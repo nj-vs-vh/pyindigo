@@ -9,12 +9,12 @@
 #include "pyindigo_ccd_client.h"
 
 #include <indigo/indigo_bus.h>
-#include <indigo/indigo_client.h>
+// #include <indigo/indigo_client.h>
 
 
 char *ccd_driver_so_filename;
 
-indigo_driver_entry *driver;
+struct indigo_driver_entry *driver;
 
 PyObject* pyindigo_IndigoException;
 
@@ -42,6 +42,7 @@ setup_ccd_client(PyObject* self)
     indigo_attach_client(&ccd_client);
     if (indigo_load_driver(ccd_driver_so_filename, true, &driver) == INDIGO_OK)
     {
+        set_ccd_image_processing_callback(process_ccd_shot_with_python_callback);
         Py_RETURN_NONE;
     }
     else
@@ -67,10 +68,9 @@ static PyObject *shot_processing_callback = NULL;
 void process_ccd_shot_with_python_callback(const void *start, size_t size)
 {
     // char (*buffer)[size] = (char (*)[size]) start;
-    PyObject *result;
     PyObject *arglist;
-    arglist = Py_BuildValue('(y#)', start, size);
-    result = PyObject_CallObject(shot_processing_callback, arglist);
+    arglist = Py_BuildValue("(y#)", start, size);
+    PyObject_CallObject(shot_processing_callback, arglist);
     Py_DECREF(arglist);
 }
 
