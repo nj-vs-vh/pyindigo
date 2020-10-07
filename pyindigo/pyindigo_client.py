@@ -1,13 +1,21 @@
-# debugging
-# export PYTHONPATH="/home/njvh/Documents/Science/sphere/camera-server/pyindigo/bin/shared"
-
-import importlib.util
-spec = importlib.util.spec_from_file_location(
-    "_pyindigo",
-    "/home/njvh/Documents/Science/sphere/camera-server/pyindigo/build/lib.linux-x86_64-3.8/"
-    + "_pyindigo.cpython-38-x86_64-linux-gnu.so",
-)
-_pyindigo = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(_pyindigo)
+import _pyindigo
 
 print(_pyindigo.version())
+
+_pyindigo.set_ccd_driver_and_device("CCD Imager Simulator", "indigo_ccd_simulator")
+
+_pyindigo.setup_ccd_client()
+
+
+def save_bytes_to_file(b: bytes) -> None:
+    print('test')
+    with open('temp.fits', 'wb') as f:
+        f.write(b)
+    _pyindigo.cleanup_ccd_client()
+    exit()
+
+
+_pyindigo.take_shot_with_exposure(5.0, save_bytes_to_file)
+
+while True:
+    pass

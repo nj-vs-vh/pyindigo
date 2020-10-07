@@ -1,23 +1,71 @@
-DEBUG_BUILD = -g
-INDIGO_ROOT = /home/njvh/Documents/Science/sphere/camera-server/indigo
-BUILD_ROOT = $(INDIGO_ROOT)/build
-BUILD_LIB = $(BUILD_ROOT)/lib
+# indigo compilation stuff
+
+INDIGO_DEBUG_BUILD = -g
+INDIGO_ROOT = ../indigo
+INDIGO_LIB_DIR = $(INDIGO_ROOT)/build/lib
+
+CFLAGS = $(INDIGO_DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_LINUX
+LDFLAGS = -L$(INDIGO_LIB_DIR) -lindigo
+
+INDIGO_SONAME = libindigo.so  # used later
 
 
-CFLAGS = $(DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_LINUX
-LDFLAGS = -L$(BUILD_LIB) -lindigo
+# prepare directory for compiled files (added as an order only prerequisite)
+
+BINDIR= ./bin
+
+${BINDIR}:
+	mkdir -p ${BINDIR}
 
 
-all: | build_object_file create_shared_library
+# ccd client shared library building
+
+CCD_CLIENT_OBJECT = ${BINDIR}/pyindigo_ccd_client.o
+CCD_CLIENT_LIB = ${BINDIR}/libpyindigo_ccd_client.so
 
 
-TEMP_O_FILE = ./bin/pyindigo_ccd_client.o
+${CCD_CLIENT_OBJECT}: pyindigo_ccd_client.c | ${BINDIR}
+	gcc -c -fPIC $< -o $@ $(CFLAGS)
 
-# mkdir bin && cd bin && mkdir shared && cd ..
 
-# delete -c ???
-build_object_file: pyindigo_ccd_client.c
-	gcc -c -fPIC $^ -o ${TEMP_O_FILE} $(CFLAGS) $(LDFLAGS)
+${CCD_CLIENT_LIB}: ${CCD_CLIENT_OBJECT} | ${BINDIR}
+	gcc -shared $< -o $@
 
-create_shared_library:
-	gcc -shared ${TEMP_O_FILE} -o ./bin/shared/libpyindigo_ccd_client.so
+
+# python extension building and installation to virtual environment
+
+INDIGO_VENV_NAME = indgenv
+INDIGO_VENV_PATH = ../${INDIGO_VENV_NAME}
+
+${INDIGO_VENV_PATH}:
+	cd ..
+	python3 -m venv ${INDIGO_VENV_NAME}
+	bash -c ". ${INDIGO_VENV_NAME}/bin/activate;"
+	pip3 install -r requirements.txt
+	cd pyindigo
+
+
+PYTHON_INSTALLATION_LOG = setup_py_installation_log.txt
+
+activate_python_virtual_environment:
+	bash -c ". ../${INDIGO_VENV_NAME}/bin/activate;"
+
+python_extension: ${INDIGO_VENV_PATH} activate_python_virtual_environment
+	python3 setup.py install --record ${PYTHON_INSTALLATION_LOG}
+
+
+# commands
+
+.PHONY: install clean
+
+install: ${CCD_CLIENT_LIB} python_extension
+	cp ${CCD_CLIENT_LIB} ${INDIGO_LIB_DIR}
+	echo "Make sure LD_LIBRARY_PATH env variable includes:"
+	echo $(realpath ${INDIGO_LIB_DIR})
+
+ISTALLED_CCD_CLIENT_LIB = ${INDIGO_LIB_DIR}/$(notdir ${CCD_CLIENT_LIB})
+
+clean:
+	chmod +x setup_py_uninstall && \
+	./setup_py_uninstall ${PYTHON_INSTALLATION_LOG} && \
+	rm -rf ${BINDIR} build ${PYTHON_INSTALLATION_LOG} ${ISTALLED_CCD_CLIENT_LIB}

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# In Makefile, all files copied to python's site-packages dir are logged
+# this is a short script that reads this log file and deletes all files listed there
+# as indicated in the name, it's used to 'uninstall' module (i.e. during `make clean`)
+
+input="$1"
+while IFS= read -r line
+do
+  rm "$line"
+done < "$input"

@@ -6,8 +6,8 @@ indigo_root = Path('../indigo').resolve()
 module = Extension(
     "_pyindigo",
     sources=['_pyindigo.c'],
-    library_dirs=['/home/njvh/Documents/Science/sphere/camera-server/pyindigo/bin/shared/'],
-    libraries=['pyindigo_ccd_client'],
+    library_dirs=['./bin', '../indigo/build/lib/'],
+    libraries=['pyindigo_ccd_client', 'indigo'],
     extra_compile_args=[f'-I{indigo_root}/indigo_libs', f'-L{indigo_root}/build/lib'],
 )
 

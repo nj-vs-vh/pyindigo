@@ -1,5 +1,31 @@
 # Телеметрия в эксперименте Тунка
 
+## Установка
+
+1. Склонировать этот репозиторий
+
+```bash
+git clone https://github.com/nj-vs-vh/tunka-telemetry-server.git camera-server
+```
+
+2. Установить фреймворк INDIGO в субдиректорию, скомпилировать исполняемиые файлы и библиотеки
+
+```bash
+cd camera-server
+git clone https://github.com/indigo-astronomy/indigo.git
+cd indigo
+make all
+```
+
+3. Скомпилировать кастомный CCD-клиент и модуль-расширение Python. На этом шаге `make` автоматически создаст виртуальное окружения с нужной версией Python и всеми зависимостями; скомпилирует Indigo-клиент; скомпилирует и построит расширение Python с интерфейсом для Indigo.
+
+```bash
+cd ../pyindigo
+make install
+```
+
+4. Важно! Для работы с динамическими библиотеками INDIGO необходимо добавить в переменную окружения `LD_LIBRARY_PATH` папку indigo/build/lib/. Для этого проще всего добавить в activate-скрипт виртуального окружения соответствующую команду: ```nano indgenv/bin/activate```, вставить в конец `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/njvh/Documents/Science/sphere/camera-server/indigo/build/lib"`, сохранить, запустить файл ещё раз.
+
 ## Камера
 
 Модель камеры: ZWO ASI120MC-S

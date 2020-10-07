@@ -19,6 +19,18 @@ struct indigo_driver_entry *driver;
 PyObject* pyindigo_IndigoException;
 
 
+static PyObject *shot_processing_callback = NULL;
+
+void process_ccd_shot_with_python_callback(const void *start, size_t size)
+{
+    // char (*buffer)[size] = (char (*)[size]) start;
+    PyObject *arglist;
+    arglist = Py_BuildValue("(y#)", start, size);
+    PyObject_CallObject(shot_processing_callback, arglist);
+    Py_DECREF(arglist);
+}
+
+
 static PyObject*
 version(PyObject* self)
 {
@@ -60,18 +72,6 @@ cleanup_ccd_client(PyObject* self)
 	indigo_detach_client(&ccd_client);
 	indigo_stop();
     Py_RETURN_NONE;
-}
-
-
-static PyObject *shot_processing_callback = NULL;
-
-void process_ccd_shot_with_python_callback(const void *start, size_t size)
-{
-    // char (*buffer)[size] = (char (*)[size]) start;
-    PyObject *arglist;
-    arglist = Py_BuildValue("(y#)", start, size);
-    PyObject_CallObject(shot_processing_callback, arglist);
-    Py_DECREF(arglist);
 }
 
 
