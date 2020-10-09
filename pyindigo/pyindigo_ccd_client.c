@@ -2,12 +2,12 @@
 // based largely on client examples provided by INDIGO team:
 // https://github.com/indigo-astronomy/indigo/tree/master/indigo_examples
 
-// developed on 07/09/20 by Igor Vaiman, SINP MSU, as part of TAIGA experiment
+// TODO: more general dispatching off callbacks to allow general-purpose interface
+// this will likely require storing C-string -> C-function mapping
+
+// developed by Igor Vaiman, SINP MSU, as part of TAIGA experiment
 
 // Original copyright:
-
-// Copyright (c) 2020 CloudMakers, s. r. o. & Rumen G.Bogdanovski
-// All rights reserved.
 //
 // You can use this software under the terms of 'INDIGO Astronomy
 // open-source license' (see LICENSE.md).
@@ -32,9 +32,10 @@
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
-static bool device_connected = false;
+#include "_pyindigo.h"
 
-char *ccd_device_name;
+char* ccd_device_name;
+static bool device_connected = false;
 
 static indigo_result ccd_client_attach(indigo_client *client) {
 	indigo_log("attached to INDIGO bus...");
@@ -44,6 +45,7 @@ static indigo_result ccd_client_attach(indigo_client *client) {
 
 static indigo_result ccd_client_define_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
 	if (strcmp(property->device, ccd_device_name))
+		// anything but our dedicated ccd_device_name is ignored
 		return INDIGO_OK;
 	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME)) {
 		if (indigo_get_switch(property, CONNECTION_CONNECTED_ITEM_NAME)) {
@@ -69,15 +71,6 @@ static indigo_result ccd_client_define_property(indigo_client *client, indigo_de
 }
 
 
-void (*ccd_image_processing_callback)(const void *start, size_t size);
-
-
-void set_ccd_image_processing_callback(void (*callback)(const void *start, size_t size))
-{
-	ccd_image_processing_callback = callback;
-}
-
-
 static indigo_result ccd_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
 	if (strcmp(property->device, ccd_device_name))
 		return INDIGO_OK;
@@ -97,23 +90,10 @@ static indigo_result ccd_client_update_property(indigo_client *client, indigo_de
 	}
 	if (!strcmp(property->name, CCD_IMAGE_PROPERTY_NAME) && property->state == INDIGO_OK_STATE) {
 		if (property->items[0].blob.value) {
-			// FILE *f = fopen("test_img.fits", "wb");
-			// fwrite(property->items[0].blob.value, property->items[0].blob.size, 1, f);
-			// fclose(f);
-			ccd_image_processing_callback(property->items[0].blob.value, property->items[0].blob.size);
-			indigo_log("image saved!");
+			process_ccd_shot_with_python_callback(property->items[0].blob.value, property->items[0].blob.size);
 		}
+		return INDIGO_OK;
 	}
-	// if (!strcmp(property->name, CCD_EXPOSURE_PROPERTY_NAME)) {
-	// 	if (property->state == INDIGO_BUSY_STATE) {
-	// 		indigo_log("exposure %gs...", property->items[0].number.value);
-	// 	} else if (property->state == INDIGO_OK_STATE) {
-	// 		indigo_log("exposure done...");
-	// 	}
-
-	// 	return INDIGO_OK;
-	// }
-	return INDIGO_OK;
 }
 
 static indigo_result ccd_client_detach(indigo_client *client) {

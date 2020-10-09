@@ -12,8 +12,14 @@ module = Extension(
 )
 
 setup(
-    name='_pyindigo',
-    version='0.0.1',
-    description='Python interface for INDIGO client',
-    ext_modules=[module]
+    name='pyindigo',
+    version='0.1.0',
+    author='Igor Vaiman',
+    author_email='gosha.vaiman@gmail.com',
+    description='Python interface for INDIGO client (alpha)',
+    # py_modules=['ccd_device.py']
+    ext_modules=[module],
+    # package_data={
+    #     'pyindigo': '../indigo/build/lib/'
+    # }
 )

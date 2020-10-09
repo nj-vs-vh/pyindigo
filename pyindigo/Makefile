@@ -29,7 +29,7 @@ ${CCD_CLIENT_OBJECT}: pyindigo_ccd_client.c | ${BINDIR}
 
 
 ${CCD_CLIENT_LIB}: ${CCD_CLIENT_OBJECT} | ${BINDIR}
-	gcc -shared $< -o $@
+	gcc -shared $< -o $@ $(CFLAGS)
 
 
 # python extension building and installation to virtual environment
@@ -47,10 +47,7 @@ ${INDIGO_VENV_PATH}:
 
 PYTHON_INSTALLATION_LOG = setup_py_installation_log.txt
 
-activate_python_virtual_environment:
-	bash -c ". ../${INDIGO_VENV_NAME}/bin/activate;"
-
-python_extension: ${INDIGO_VENV_PATH} activate_python_virtual_environment
+python_extension: ${INDIGO_VENV_PATH}
 	python3 setup.py install --record ${PYTHON_INSTALLATION_LOG}
 
 
@@ -60,7 +57,6 @@ python_extension: ${INDIGO_VENV_PATH} activate_python_virtual_environment
 
 install: ${CCD_CLIENT_LIB} python_extension
 	cp ${CCD_CLIENT_LIB} ${INDIGO_LIB_DIR}
-	echo "Make sure LD_LIBRARY_PATH env variable includes:"
 	echo $(realpath ${INDIGO_LIB_DIR})
 
 ISTALLED_CCD_CLIENT_LIB = ${INDIGO_LIB_DIR}/$(notdir ${CCD_CLIENT_LIB})
