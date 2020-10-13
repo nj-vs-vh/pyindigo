@@ -5,34 +5,29 @@ import time
 
 
 def save_bytes_to_file(b: bytes = None) -> None:
-    global file_written
-    hdul = HDUList.fromstring(b)
-    hdul.writeto('astropy_temp.fits')
+    try:
+        global file_written
+        hdul = HDUList.fromstring(b)
+        hdul.writeto('astropy_temp.fits')
+    except Exception as e:
+        print(f'error occured in callback: {e}')
     file_written = True
 
 
-for i in range(3):
+_pyindigo.set_device_name("CCD Imager Simulator")
+_pyindigo.get_current_device_name()
 
-    # print(_pyindigo.version())
+_pyindigo.setup_ccd_client("indigo_ccd_simulator")
 
-    _pyindigo.set_device_name("CCD Imager Simulator")
-    _pyindigo.get_current_device_name()
+file_written = False
 
-    _pyindigo.setup_ccd_client("indigo_ccd_simulator")
+_pyindigo.set_shot_processing_callback(save_bytes_to_file)
 
-    file_written = False
+_pyindigo.take_shot_with_exposure(0.1)
 
-    _pyindigo.set_shot_processing_callback(save_bytes_to_file)
+while file_written is False:
+    time.sleep(0.01)
 
-    _pyindigo.take_shot_with_exposure(0.1)
+print('file written!')
 
-    while file_written is False:
-        time.sleep(0.01)
-
-    print('file written!')
-
-    time.sleep(0.1)
-
-    _pyindigo.cleanup_ccd_client()
-
-    time.sleep(0.1)
+_pyindigo.cleanup_ccd_client()

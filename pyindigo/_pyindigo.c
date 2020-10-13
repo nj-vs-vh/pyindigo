@@ -80,19 +80,19 @@ setup_ccd_client(PyObject* self, PyObject* args)
 static PyObject*
 cleanup_ccd_client(PyObject* self)
 {
-    printf("%s\n", ccd_device_name);
-    char* local_ccd_device_name = PyMem_RawMalloc(100);
-    strcpy(local_ccd_device_name, ccd_device_name);
+	indigo_device_disconnect(&ccd_client, ccd_device_name);
 
-	indigo_device_disconnect(&ccd_client, local_ccd_device_name);
-    indigo_set_log_level(INDIGO_LOG_TRACE);
-	indigo_remove_driver(driver);  // here lies some mysterious problem!
-    indigo_set_log_level(INDIGO_LOG_ERROR);
+    /*
+    this is a temporary workaround to prevent race between device disconnect and driver removal
+    fix on INDIGO side is on the way!
+    for discussion see https://github.com/indigo-astronomy/indigo/issues/377
+    */ 
+    sleep(1);
+	
+    
+    indigo_remove_driver(driver);
 	indigo_detach_client(&ccd_client);
 	indigo_stop();
-
-    free(local_ccd_device_name);
-
     Py_RETURN_NONE;
 }
 
