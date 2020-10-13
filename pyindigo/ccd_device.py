@@ -1,16 +1,17 @@
-import time
-
 import _pyindigo
+from astropy.io.fits import HDUList
+
+import time
 
 
 def save_bytes_to_file(b: bytes = None) -> None:
     global file_written
-    # with open('temp.fits', 'wb') as f:
-    #     f.write(b)
+    hdul = HDUList.fromstring(b)
+    hdul.writeto('astropy_temp.fits')
     file_written = True
 
 
-for i in range(50):
+for i in range(3):
 
     # print(_pyindigo.version())
 

@@ -210,3 +210,5 @@ indigo
 experiments
 *bin*
 *build*
+*.txt
+*.fits

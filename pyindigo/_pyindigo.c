@@ -27,7 +27,12 @@ void process_ccd_shot_with_python_callback(const void *buffer, size_t size)
 
     PyObject *result;
     result = PyObject_CallFunction(shot_processing_callback, "y#", buffer, (Py_ssize_t)size);
-    Py_DECREF(result);  // we don't need callback's result!
+    if (result == NULL) {
+        // TODO: Launch error handler callback
+    }
+    else {
+        Py_XDECREF(result);
+    }
 
     PyGILState_Release(gstate);
 }
