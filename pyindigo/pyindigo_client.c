@@ -1,11 +1,9 @@
-// indigo client intended to be wrapped in a Python class
-// based largely on client examples provided by INDIGO team:
-// https://github.com/indigo-astronomy/indigo/tree/master/indigo_examples
+// indigo client intended to be wrapped in a Python module
 
 // TODO: more general dispatching off callbacks to allow general-purpose interface
 // this will likely require storing C-string -> C-function mapping
 
-// developed by Igor Vaiman, SINP MSU, as part of TAIGA experiment
+// developed by Igor Vaiman, SINP MSU
 
 // Original copyright:
 //
@@ -32,66 +30,55 @@
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
-#include "_pyindigo.h"
+#include "pyindigo.h"
 
-char* ccd_device_name;
-static bool device_connected = false;
 
-static indigo_result ccd_client_attach(indigo_client *client) {
+static indigo_result pyindigo_client_attach(indigo_client *client) {
 	indigo_log("attached to INDIGO bus...");
 	indigo_enumerate_properties(client, &INDIGO_ALL_PROPERTIES);
 	return INDIGO_OK;
 }
 
-static indigo_result ccd_client_define_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
+static indigo_result pyindigo_client_define_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
+	// if we are ale to connect to the device, try to do so
+	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME)) {
+		if (indigo_get_switch(property, CONNECTION_DISCONNECTED_ITEM_NAME)) {
+			device_defined_callback(property->device);
+			indigo_device_connect(client, property->device);
+			return INDIGO_OK;
+		}
+	}
+	// no external config is used, all properties are expected to be set explicitly from Python
 	if (!strcmp(property->name, CONFIG_PROPERTY_NAME)) {
-		// this applies to any INDIGO device!
 		static const char * items[] = { CONFIG_LOAD_ITEM_NAME, CONFIG_SAVE_ITEM_NAME, CONFIG_REMOVE_ITEM_NAME };
 		static bool values[] = { false, true, false };
 		indigo_change_switch_property(client, property->device, CONFIG_PROPERTY_NAME, 3, items, values);
 	}
-	if (strcmp(property->device, ccd_device_name))
-		// anything but our dedicated ccd_device_name is ignored
-		// printf("%s\n", property->device);
-		return INDIGO_OK;
-	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME)) {
-		if (indigo_get_switch(property, CONNECTION_CONNECTED_ITEM_NAME)) {
-			device_connected = true;
-			indigo_log("already connected...");
-		} else {
-			indigo_device_connect(client, ccd_device_name);
-			return INDIGO_OK;
-		}
-	}
+	// always use blobs as we are operationg locally
 	if (!strcmp(property->name, CCD_IMAGE_PROPERTY_NAME)) {
 		if (device->version >= INDIGO_VERSION_2_0)
 			indigo_enable_blob(client, property, INDIGO_ENABLE_BLOB_URL);
 		else
 			indigo_enable_blob(client, property, INDIGO_ENABLE_BLOB_ALSO);
 	}
+	// always use fits if the device allows so
 	if (!strcmp(property->name, CCD_IMAGE_FORMAT_PROPERTY_NAME)) {
 		static const char * items[] = { CCD_IMAGE_FORMAT_FITS_ITEM_NAME };
 		static bool values[] = { true };
-		indigo_change_switch_property(client, ccd_device_name, CCD_IMAGE_FORMAT_PROPERTY_NAME, 1, items, values);
+		indigo_change_switch_property(client, property->device, CCD_IMAGE_FORMAT_PROPERTY_NAME, 1, items, values);
 	}
 	return INDIGO_OK;
 }
 
 
-static indigo_result ccd_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
-	if (strcmp(property->device, ccd_device_name))
-		return INDIGO_OK;
+static indigo_result pyindigo_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
 	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME) && property->state == INDIGO_OK_STATE) {
 		if (indigo_get_switch(property, CONNECTION_CONNECTED_ITEM_NAME)) {
-			if (!device_connected) {
-				device_connected = true;
-				indigo_log("connected...");
-			}
+			device_connected_callback(property->device);
+			indigo_log("connected...");
 		} else {
-			if (device_connected) {
-				indigo_log("disconnected...");
-				device_connected = false;
-			}
+			device_disconnected_callback(property->device);
+			indigo_log("disconnected...");
 		}
 		return INDIGO_OK;
 	}
@@ -103,17 +90,17 @@ static indigo_result ccd_client_update_property(indigo_client *client, indigo_de
 	}
 }
 
-static indigo_result ccd_client_detach(indigo_client *client) {
+static indigo_result pyindigo_client_detach(indigo_client *client) {
 	indigo_log("detached from INDIGO bus...");
 	return INDIGO_OK;
 }
 
-indigo_client ccd_client = {
+indigo_client pyindigo_client = {
 	"CCD client", false, NULL, INDIGO_OK, INDIGO_VERSION_CURRENT, NULL,
-	ccd_client_attach,
-	ccd_client_define_property,
-	ccd_client_update_property,
+	pyindigo_client_attach,
+	pyindigo_client_define_property,
+	pyindigo_client_update_property,
 	NULL,
 	NULL,
-	ccd_client_detach
+	pyindigo_client_detach
 };
