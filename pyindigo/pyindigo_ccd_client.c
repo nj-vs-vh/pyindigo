@@ -44,8 +44,15 @@ static indigo_result ccd_client_attach(indigo_client *client) {
 }
 
 static indigo_result ccd_client_define_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
+	if (!strcmp(property->name, CONFIG_PROPERTY_NAME)) {
+		// this applies to any INDIGO device!
+		static const char * items[] = { CONFIG_LOAD_ITEM_NAME, CONFIG_SAVE_ITEM_NAME, CONFIG_REMOVE_ITEM_NAME };
+		static bool values[] = { false, true, false };
+		indigo_change_switch_property(client, property->device, CONFIG_PROPERTY_NAME, 3, items, values);
+	}
 	if (strcmp(property->device, ccd_device_name))
 		// anything but our dedicated ccd_device_name is ignored
+		// printf("%s\n", property->device);
 		return INDIGO_OK;
 	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME)) {
 		if (indigo_get_switch(property, CONNECTION_CONNECTED_ITEM_NAME)) {

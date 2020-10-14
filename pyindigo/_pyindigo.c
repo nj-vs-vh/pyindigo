@@ -27,12 +27,7 @@ void process_ccd_shot_with_python_callback(const void *buffer, size_t size)
 
     PyObject *result;
     result = PyObject_CallFunction(shot_processing_callback, "y#", buffer, (Py_ssize_t)size);
-    if (result == NULL) {
-        // TODO: Launch error handler callback
-    }
-    else {
-        Py_XDECREF(result);
-    }
+    Py_XDECREF(result);
 
     PyGILState_Release(gstate);
 }
@@ -65,6 +60,7 @@ get_current_device_name(PyObject* self)
 static PyObject*
 setup_ccd_client(PyObject* self, PyObject* args)
 {
+    indigo_set_log_level(INDIGO_LOG_INFO);
     char* ccd_driver_lib_name;
     if (!PyArg_ParseTuple(args, "s", &ccd_driver_lib_name))
         return NULL;
@@ -134,6 +130,19 @@ take_shot_with_ccd(PyObject* self, PyObject* args)
 }
 
 
+static PyObject*
+set_gain(PyObject* self, PyObject* args)
+{
+    float gain;
+    if (!PyArg_ParseTuple(args, "f", &gain))
+        return NULL;
+    const char * items[] = { CCD_GAIN_ITEM_NAME };
+    double values[1] = { gain };
+    indigo_change_number_property(&ccd_client, ccd_device_name, CCD_GAIN_PROPERTY_NAME, 1, items, values);
+    Py_RETURN_NONE;
+}
+
+
 // Python module stuff
 
 
@@ -145,6 +154,7 @@ static PyMethodDef methods[] = {
     {"cleanup_ccd_client", (PyCFunction)cleanup_ccd_client, METH_NOARGS, "detach driver and devices, stop INDIGO bus"},
     {"set_shot_processing_callback", (PyCFunction)set_shot_processing_callback, METH_VARARGS, "store new callback"},
     {"take_shot_with_exposure", (PyCFunction)take_shot_with_ccd, METH_VARARGS, "request new image from driver"},
+    {"set_gain", (PyCFunction)set_gain, METH_VARARGS, "set CCD device gain"},
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
