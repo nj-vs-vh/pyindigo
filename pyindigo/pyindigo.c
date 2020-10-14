@@ -5,11 +5,12 @@
 #define PY_SSIZE_T_CLEAN
 #include "python3.8/Python.h"
 
+#include <pthread.h>
+
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
 #include "pyindigo_client.h"
-
 
 struct indigo_driver_entry *driver;  // typedef is not recognized by linter for some reason
 
@@ -60,23 +61,29 @@ cleanup_indigo_client(PyObject* self)
 static PyObject *device_defined_python_callback = NULL;
 
 void device_defined_callback(char* device_name) {
+    printf("%s (%s)\n", "before ensuring GIL...", __FUNCTION__);
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
+    printf("%s (%s)\n", "GIL ensured!", __FUNCTION__);
     PyObject *result;
     result = PyObject_CallFunction(device_defined_python_callback, "s", device_name);
     Py_XDECREF(result);
     PyGILState_Release(gstate);
+    printf("%s (%s)\n", "GIL released!", __FUNCTION__);
 }
 
 static PyObject *device_connected_python_callback = NULL;
 
 void device_connected_callback(char* device_name) {
+    printf("%s (%s)\n", "before ensuring GIL...", __FUNCTION__);
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
+    printf("%s (%s)\n", "GIL ensured!", __FUNCTION__);
     PyObject *result;
     result = PyObject_CallFunction(device_connected_python_callback, "s", device_name);
     Py_XDECREF(result);
     PyGILState_Release(gstate);
+    printf("%s (%s)\n", "GIL released!", __FUNCTION__);
 }
 
 static PyObject *device_disconnected_python_callback = NULL;
@@ -92,17 +99,14 @@ void device_disconnected_callback(char* device_name) {
 
 static PyObject*
 attach_indigo_driver(PyObject* self, PyObject* args) {
-    char* ccd_driver_lib_name;
+    char* driver_lib_name;
     if (!PyArg_ParseTuple(
-        args, "sOOO", &ccd_driver_lib_name,
+        args, "sOOO", &driver_lib_name,
         &device_defined_python_callback,
         &device_connected_python_callback,
         &device_disconnected_python_callback
     ))
         return NULL;
-
-    if (indigo_load_driver(ccd_driver_lib_name, true, &driver) != INDIGO_OK)
-        return PyErr_Format(PyExc_ValueError, "Unable to load requested driver \"%s\"", ccd_driver_lib_name);
     
     if (
         !PyCallable_Check(device_defined_python_callback) ||
@@ -115,6 +119,9 @@ attach_indigo_driver(PyObject* self, PyObject* args) {
     Py_INCREF(device_defined_python_callback);
     Py_INCREF(device_connected_python_callback);
     Py_INCREF(device_disconnected_python_callback);
+
+    if (indigo_load_driver(driver_lib_name, true, &driver) != INDIGO_OK)
+        return PyErr_Format(PyExc_ValueError, "Unable to load requested driver \"%s\"", driver_lib_name);
 
     Py_RETURN_NONE;
 }

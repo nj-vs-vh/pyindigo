@@ -74,11 +74,11 @@ static indigo_result pyindigo_client_define_property(indigo_client *client, indi
 static indigo_result pyindigo_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
 	if (!strcmp(property->name, CONNECTION_PROPERTY_NAME) && property->state == INDIGO_OK_STATE) {
 		if (indigo_get_switch(property, CONNECTION_CONNECTED_ITEM_NAME)) {
-			device_connected_callback(property->device);
 			indigo_log("connected...");
+			device_connected_callback(property->device);
 		} else {
-			device_disconnected_callback(property->device);
 			indigo_log("disconnected...");
+			device_disconnected_callback(property->device);
 		}
 		return INDIGO_OK;
 	}

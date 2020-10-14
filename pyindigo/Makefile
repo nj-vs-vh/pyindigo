@@ -27,7 +27,7 @@ ${PYINDIGO_CLIENT_OBJECT}: pyindigo_client.c | ${BINDIR}
 	gcc -c -fPIC $< -o $@ $(CFLAGS)
 
 ${PYINDIGO_CLIENT_LIB}: ${PYINDIGO_CLIENT_OBJECT} | ${BINDIR}
-	gcc -shared $< -o $@ $(CFLAGS)
+	gcc -shared $< -o $@ $(CFLAGS) ${LDFLAGS}
 
 
 # python extension building and installation to virtual environment
@@ -63,3 +63,5 @@ clean:
 	chmod +x setup_py_uninstall && \
 	./setup_py_uninstall ${PYTHON_INSTALLATION_LOG} && \
 	rm -rf ${BINDIR} build ${PYTHON_INSTALLATION_LOG} ${ISTALLED_PYINDIGO_CLIENT_LIB}
+
+reinstall: clean | install
