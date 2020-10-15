@@ -1,3 +1,5 @@
+# <span style="color:red">Актуальная версия сервера лежит на ветке [**stable**](https://github.com/nj-vs-vh/tunka-telemetry-server/tree/stable). Здесь хранятся наработки для развития **pyindigo**!</span>
+
 # Телеметрия в эксперименте Тунка
 
 ## Установка
