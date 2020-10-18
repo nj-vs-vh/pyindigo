@@ -1,8 +1,4 @@
-// indigo client intended to be wrapped in a Python module
-
-// TODO: more general dispatching off callbacks to allow general-purpose interface
-// this will likely require storing C-string -> C-function mapping
-
+// INDIGO client intended to be wrapped in a Python module
 // developed by Igor Vaiman, SINP MSU
 
 // Original copyright:
@@ -30,10 +26,12 @@
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
-#include "pyindigo.h"
+#include "pyindigo_core.h"
 
 
-static indigo_result pyindigo_client_attach(indigo_client *client) {
+static indigo_result pyindigo_client_attach(indigo_client *client)
+{
+	// boilerplate startup code
 	indigo_log("attached to INDIGO bus...");
 	indigo_enumerate_properties(client, &INDIGO_ALL_PROPERTIES);
 	return INDIGO_OK;
