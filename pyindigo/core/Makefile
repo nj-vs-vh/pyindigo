@@ -1,7 +1,7 @@
 # indigo compilation stuff
 
 INDIGO_DEBUG_BUILD = -g
-INDIGO_ROOT = ../indigo
+INDIGO_ROOT = ../../indigo
 INDIGO_LIB_DIR = $(INDIGO_ROOT)/build/lib
 
 CFLAGS = $(INDIGO_DEBUG_BUILD) -O3 -I$(INDIGO_ROOT)/indigo_libs -std=gnu11 -DINDIGO_LINUX
@@ -33,10 +33,10 @@ ${PYINDIGO_CLIENT_LIB}: ${PYINDIGO_CLIENT_OBJECT} | ${BINDIR}
 # python extension building and installation to virtual environment
 
 INDIGO_VENV_NAME = indgenv
-INDIGO_VENV_PATH = ../${INDIGO_VENV_NAME}
+INDIGO_VENV_PATH = ../../${INDIGO_VENV_NAME}
 
 ${INDIGO_VENV_PATH}:
-	cd ..
+	cd ../..
 	python3 -m venv ${INDIGO_VENV_NAME}
 	bash -c ". ${INDIGO_VENV_NAME}/bin/activate;"
 	pip3 install -r requirements.txt
