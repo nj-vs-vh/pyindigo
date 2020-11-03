@@ -3,12 +3,13 @@
 // developed by Igor Vaiman, SINP MSU
 
 #define PY_SSIZE_T_CLEAN
-#include "python3.8/Python.h"
+#include "Python.h"
 
 #include <pthread.h>
 
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
+#include <indigo/indigo_version.h>
 
 #include "pyindigo_client.h"
 
@@ -73,20 +74,101 @@ set_log_level(PyObject* self, PyObject* args)
 }
 
 
+// Indigo properties modelled with Python classes
+// see pyindigo/properties/base_classes.py for base class definition
+
+static PyObject *text_vector_class = NULL;
+static PyObject *number_vector_class = NULL;
+static PyObject *switch_vector_class = NULL;
+static PyObject *light_vector_class = NULL;
+
+static PyObject*
+set_property_classes(PyObject* self, PyObject* args)
+{
+    if (
+        !PyArg_ParseTuple(
+            args, "OOOO",
+            &text_vector_class, &number_vector_class, &switch_vector_class, &light_vector_class
+        )
+    )
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+
 // dispatching callback is a single Python callable representing all possible INDIGO actions
 // all dispatching should be done on Python side
 
-
 static PyObject *dispatching_callback = NULL;
 
-void call_dispatching_callback(const char* action_type, indigo_property* property, const char *message) {
+void call_dispatching_callback(const char* action_type, indigo_device *device, indigo_property* property, const char *message)
+{
     assert(dispatching_callback != NULL);
+    assert(property != NULL);
+
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    PyObject *result = NULL;
-    // here Pyindigo property building should occur
-    result = PyObject_CallFunction(dispatching_callback, "sss", action_type, property->device, property->name);
-    Py_XDECREF(result);
+
+    PyObject* property_object = NULL;
+
+    switch (property->type) {
+        case INDIGO_TEXT_VECTOR:
+            property_object = PyObject_CallFunction(text_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            for (int i = 0; i < property->count; i++) {
+                indigo_item *item = &property->items[i];
+                PyObject_CallMethod(
+                    property_object, "add_item", "ssss",
+                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    item->text.value
+                );
+            }
+            break;
+        case INDIGO_NUMBER_VECTOR:
+            property_object = PyObject_CallFunction(number_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            for (int i = 0; i < property->count; i++) {
+                indigo_item *item = &property->items[i];
+                PyObject_CallMethod(
+                    property_object, "add_item", "ssssddddd",
+                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    item->number.format,
+                    item->number.min,
+                    item->number.max,
+                    item->number.step,
+                    item->number.value,
+                    item->number.target
+                );
+            }
+            break;
+        case INDIGO_SWITCH_VECTOR:
+            // TODO: save rule for switch vectors (i.e. one of many, many of many)
+            property_object = PyObject_CallFunction(switch_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            for (int i = 0; i < property->count; i++) {
+                indigo_item *item = &property->items[i];
+                PyObject_CallMethod(
+                    property_object, "add_item", "sssi",
+                    indigo_item_name(device->version, property, item), item->label, item->hints, item->sw.value
+                );
+            }
+            break;
+        case INDIGO_LIGHT_VECTOR:
+            property_object = PyObject_CallFunction(light_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            for (int i = 0; i < property->count; i++) {
+                indigo_item *item = &property->items[i];
+                PyObject_CallMethod(
+                    property_object, "add_item", "sssi",
+                    indigo_item_name(device->version, property, item), item->label, item->hints, item->light.value
+                );
+            }
+            break;
+        default : {}
+	}
+
+    if (property_object != NULL) {
+        PyObject *result = NULL;
+        result = PyObject_CallFunction(dispatching_callback, "sO", action_type, property_object);
+        Py_XDECREF(result);
+    }
+    
     PyGILState_Release(gstate);
 }
 
@@ -152,6 +234,7 @@ static PyMethodDef methods[] = {
     {"setup_client", (PyCFunction)setup_client, METH_NOARGS, "start INDIGO bus thread and attach client"},
     {"cleanup_client", (PyCFunction)cleanup_client, METH_NOARGS, "detach client and stop INDIGO bus thread"},
     {"set_log_level", (PyCFunction)set_log_level, METH_VARARGS, "accepts verbosity as int number (0-3)"},
+    {"set_property_classes", (PyCFunction)set_property_classes, METH_VARARGS, "set Python classes modelling Indigo properties"},
     // driver-level fuctions (may be used to communicate to several drivers in the future)
     {"attach_driver", (PyCFunction)attach_driver, METH_VARARGS, "request driver attachment from INDIGO bus"},
     {"detach_driver", (PyCFunction)detach_driver, METH_NOARGS, "request driver detachment from INDIGO bus"},

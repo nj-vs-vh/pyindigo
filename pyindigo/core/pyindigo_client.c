@@ -1,23 +1,6 @@
-// INDIGO client to be wrapped in a Python module
+// INDIGO client to be wrapped in a Python modulem
 
 // developed by Igor Vaiman, SINP MSU
-
-// Original copyright:
-//
-// You can use this software under the terms of 'INDIGO Astronomy
-// open-source license' (see LICENSE.md).
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHORS 'AS IS' AND ANY EXPRESS
-// OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <stdio.h>
@@ -30,6 +13,11 @@
 #include "pyindigo_core.h"
 
 
+#define PYINDIGO_DEFINE_ACTION "define"
+#define PYINDIGO_UPDATE_ACTION "update"
+#define PYINDIGO_DELETE_ACTION "delete"
+
+
 static indigo_result pyindigo_client_attach(indigo_client *client)
 {
 	indigo_log("attached to INDIGO bus...");
@@ -38,18 +26,18 @@ static indigo_result pyindigo_client_attach(indigo_client *client)
 }
 
 static indigo_result pyindigo_client_define_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
-	call_dispatching_callback("define", property, message);
+	call_dispatching_callback(PYINDIGO_DEFINE_ACTION, device, property, message);
 	return INDIGO_OK;
 }
 
 
 static indigo_result pyindigo_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
-	call_dispatching_callback("update", property, message);
+	call_dispatching_callback(PYINDIGO_UPDATE_ACTION, device, property, message);
 	return INDIGO_OK;
 }
 
 static indigo_result pyindigo_client_delete_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
-	call_dispatching_callback("delete", property, message);
+	call_dispatching_callback(PYINDIGO_DELETE_ACTION, device, property, message);
 	return INDIGO_OK;
 }
 

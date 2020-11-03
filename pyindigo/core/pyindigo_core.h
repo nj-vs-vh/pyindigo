@@ -4,4 +4,4 @@
 #include <indigo/indigo_bus.h>
 
 
-void call_dispatching_callback(const char* action_type, indigo_property* property, const char *message);
+void call_dispatching_callback(const char* action_type, indigo_device *device, indigo_property* property, const char *message);
