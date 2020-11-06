@@ -1,3 +1,3 @@
-# pyindigo — Python interface to [INDIGO](https://github.com/indigo-astronomy/indigo)
+# pyindigo — Python interface for [INDIGO](https://github.com/indigo-astronomy/indigo) framework
 
-TODO: INDIGO_BLOB_VECTOR property type, property setting
+TODO: property setting
