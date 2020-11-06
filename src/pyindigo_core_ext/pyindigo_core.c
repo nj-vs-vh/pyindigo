@@ -14,18 +14,10 @@
 #include "pyindigo_client.h"
 
 
-// temporary working with only one driver!
-// TODO: dynamic array of driver pointers with Python objects storing indices (IDs)
+// temporaryly working with only one driver!
+// TODO: dynamic list of driver pointers with Python objects storing indices (IDs)
 //       letting Python user load and delete drivers as they please
 struct indigo_driver_entry *driver;
-
-
-// pyindigo.core version, might differ from pyindigo wrapper version
-static PyObject*
-version(PyObject* self)
-{
-    return Py_BuildValue("s", "0.1.0");
-}
 
 
 // client-level functions
@@ -75,7 +67,7 @@ set_log_level(PyObject* self, PyObject* args)
 
 
 // Indigo properties modelled with Python classes
-// see pyindigo/properties/base_classes.py for base class definition
+// see src/properties/base_classes.py for base class definition
 
 static PyObject *text_vector_class = NULL;
 static PyObject *number_vector_class = NULL;
@@ -229,7 +221,6 @@ disconnect_device(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef methods[] = {
-    {"version", (PyCFunction)version, METH_NOARGS, "pyindigo.core version"},
     // client-level functions (used once per module)
     {"setup_client", (PyCFunction)setup_client, METH_NOARGS, "start INDIGO bus thread and attach client"},
     {"cleanup_client", (PyCFunction)cleanup_client, METH_NOARGS, "detach client and stop INDIGO bus thread"},
@@ -245,15 +236,15 @@ static PyMethodDef methods[] = {
     {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
-static struct PyModuleDef pyindigo_core = {
+static struct PyModuleDef pyindigo_core_ext = {
     PyModuleDef_HEAD_INIT,
-    "core",
-    "Direct bindings to INDIGO calls",
+    "core_ext",
+    "C extension module with bindings to Indigo functions. Together with pyindigo.core form core Pyindigo functionality",
     -1,
     methods
 };
 
-PyMODINIT_FUNC PyInit_core(void)
+PyMODINIT_FUNC PyInit_core_ext(void)
 {
-    return PyModule_Create(&pyindigo_core);
+    return PyModule_Create(&pyindigo_core_ext);
 }
