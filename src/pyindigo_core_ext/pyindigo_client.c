@@ -32,6 +32,14 @@ static indigo_result pyindigo_client_define_property(indigo_client *client, indi
 
 
 static indigo_result pyindigo_client_update_property(indigo_client *client, indigo_device *device, indigo_property *property, const char *message) {
+	// TODO: general solution neede for this
+	// 		 what does it do? will code break withou it? search indigo docs
+	if (!strcmp(property->name, CCD_IMAGE_PROPERTY_NAME)) {
+		if (device->version >= INDIGO_VERSION_2_0)
+			indigo_enable_blob(client, property, INDIGO_ENABLE_BLOB_URL);
+		else
+			indigo_enable_blob(client, property, INDIGO_ENABLE_BLOB_ALSO);
+	}
 	call_dispatching_callback(PYINDIGO_UPDATE_ACTION, device, property, message);
 	return INDIGO_OK;
 }

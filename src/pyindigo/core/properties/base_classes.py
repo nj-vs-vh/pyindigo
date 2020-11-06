@@ -26,7 +26,7 @@ class IndigoProperty(ABC):
         self.items = []
 
     def add_item(self, *item_contents):
-        """Method used to construct property item-by-item from Indigo client C code"""
+        """Used to construct property item-by-item from Indigo client callback C code"""
         self.items.append(self.item_type(*item_contents))
 
     def __repr__(self):

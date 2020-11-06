@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from .base_classes import IndigoProperty
 
-from .items import TextItem, NumberItem, SwitchItem, LightItem
+from .items import TextItem, NumberItem, SwitchItem, LightItem, BlobItem
 
 
 @dataclass(repr=False)
@@ -32,3 +32,8 @@ class SwitchVectorProperty(IndigoProperty):
 @dataclass(repr=False)
 class LightVectorProperty(IndigoProperty):
     item_type = LightItem
+
+
+@dataclass(repr=False)
+class BlobVectorProperty(IndigoProperty):
+    item_type = BlobItem

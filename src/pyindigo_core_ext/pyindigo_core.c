@@ -73,14 +73,15 @@ static PyObject *text_vector_class = NULL;
 static PyObject *number_vector_class = NULL;
 static PyObject *switch_vector_class = NULL;
 static PyObject *light_vector_class = NULL;
+static PyObject *blob_vector_class = NULL;
 
 static PyObject*
 set_property_classes(PyObject* self, PyObject* args)
 {
     if (
         !PyArg_ParseTuple(
-            args, "OOOO",
-            &text_vector_class, &number_vector_class, &switch_vector_class, &light_vector_class
+            args, "OOOOO",
+            &text_vector_class, &number_vector_class, &switch_vector_class, &light_vector_class, &blob_vector_class
         )
     )
         return NULL;
@@ -120,13 +121,13 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "ssssddddd",
+                    property_object, "add_item", "sssdsdddd",
                     indigo_item_name(device->version, property, item), item->label, item->hints,
+                    item->number.value,
                     item->number.format,
                     item->number.min,
                     item->number.max,
                     item->number.step,
-                    item->number.value,
                     item->number.target
                 );
             }
@@ -149,6 +150,17 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 PyObject_CallMethod(
                     property_object, "add_item", "sssi",
                     indigo_item_name(device->version, property, item), item->label, item->hints, item->light.value
+                );
+            }
+            break;
+        case INDIGO_BLOB_VECTOR:
+            property_object = PyObject_CallFunction(blob_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            for (int i = 0; i < property->count; i++) {
+                indigo_item *item = &property->items[i];
+                PyObject_CallMethod(
+                    property_object, "add_item", "sssy#s",
+                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    item->blob.value, (Py_ssize_t)item->blob.size, item->blob.format
                 );
             }
             break;
@@ -205,6 +217,18 @@ detach_driver(PyObject* self)
 }
 
 
+// TESTING
+// TODO: general mechanism for setting properties from Python code
+static PyObject*
+take_shot(PyObject* self)
+{
+    const char * items[] = { CCD_EXPOSURE_ITEM_NAME };
+    double values[1] = { 3.0 };
+    indigo_change_number_property(&pyindigo_client, "CCD Imager Simulator", CCD_EXPOSURE_PROPERTY_NAME, 1, items, values);
+    Py_RETURN_NONE;
+}
+
+
 // device-level functions
 
 
@@ -230,6 +254,8 @@ static PyMethodDef methods[] = {
     {"attach_driver", (PyCFunction)attach_driver, METH_VARARGS, "request driver attachment from INDIGO bus"},
     {"detach_driver", (PyCFunction)detach_driver, METH_NOARGS, "request driver detachment from INDIGO bus"},
     {"set_dispatching_callback", (PyCFunction)set_dispatching_callback, METH_VARARGS, "set master-callback"},
+    // testing
+    {"take_shot", (PyCFunction)take_shot, METH_NOARGS, ""},
     // device-level functions — one driver can have several devices
     // there's no "connect_indigo_device'"function, all devices are connected automatically as they are available
     {"disconnect_device", (PyCFunction)disconnect_device, METH_VARARGS, "request device disconnection from INDIGO bus"},

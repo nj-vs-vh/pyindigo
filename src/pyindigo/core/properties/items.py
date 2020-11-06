@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
 from .base_classes import IndigoItem
 
@@ -16,15 +17,14 @@ class TextItem(IndigoItem):
 
 @dataclass
 class NumberItem(IndigoItem):
-    format: str  # format specifier, see https://en.wikipedia.org/wiki/Printf_format_string#Type_field
-    min: float
-    max: float
-    step: float
     value: float
-    target: float
+    format: str = r'%g'  # format specifier, see https://en.wikipedia.org/wiki/Printf_format_string#Type_field
+    min: Optional[float] = None
+    max: Optional[float] = None
+    step: Optional[float] = None
+    target: Optional[float] = None
 
     def __str__(self):
-        """Representation for interval with step follows Python slice notation [start:stop:step]"""
         def dtoa(d: float) -> str:
             try:
                 return ('{' + self.format.replace('%', ':') + '}').format(d)
@@ -34,6 +34,7 @@ class NumberItem(IndigoItem):
         return (
             f'{self.name} = {dtoa(self.value)}'
             + f', target {dtoa(self.target)}'
+            # representation for interval with step follows Python slice notation [min:max:step]
             + f', in range [{dtoa(self.min)}:{dtoa(self.max)}:{dtoa(self.step)}]'
         )
 
@@ -43,7 +44,7 @@ class SwitchItem(IndigoItem):
     value: bool
 
     def __post_init__(self):
-        """self.value is passed from C as int, conversion to bool"""
+        """self.value is passed from C as int, conversion to bool is done"""
         self.value = bool(self.value)
 
     def __str__(self):
@@ -63,8 +64,17 @@ class LightItem(IndigoItem):
     value: IndigoPropertyState
 
     def __post_init__(self):
-        """self.value is passed from C as int, conversion to IndigoPropertyState enum"""
+        """self.value is passed from C as int, conversion to IndigoPropertyState"""
         self.value = IndigoPropertyState(self.value)
 
     def __str__(self):
         return f'{self.name} is in {self.value.name} state'
+
+
+@dataclass
+class BlobItem(IndigoItem):
+    value: bytes
+    format: str
+
+    def __str__(self):
+        return f'{len(self.value or [])} bytes BLOB {self.name} in "{self.format}" format'
