@@ -126,8 +126,8 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "ssss",
-                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    property_object, "add_item", "ss",
+                    indigo_item_name(device->version, property, item),
                     item->text.value
                 );
             }
@@ -136,8 +136,8 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "sssdsdddd",
-                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    property_object, "add_item", "sdsdddd",
+                    indigo_item_name(device->version, property, item),
                     item->number.value,
                     item->number.format,
                     item->number.min,
@@ -152,8 +152,9 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "sssi",
-                    indigo_item_name(device->version, property, item), item->label, item->hints, item->sw.value
+                    property_object, "add_item", "si",
+                    indigo_item_name(device->version, property, item),
+                    item->sw.value
                 );
             }
             break;
@@ -161,8 +162,9 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "sssi",
-                    indigo_item_name(device->version, property, item), item->label, item->hints, item->light.value
+                    property_object, "add_item", "si",
+                    indigo_item_name(device->version, property, item),
+                    item->light.value
                 );
             }
             break;
@@ -170,8 +172,8 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
-                    property_object, "add_item", "sssy#s",
-                    indigo_item_name(device->version, property, item), item->label, item->hints,
+                    property_object, "add_item", "sy#s",
+                    indigo_item_name(device->version, property, item),
                     item->blob.value, (Py_ssize_t)item->blob.size, item->blob.format
                 );
             }
@@ -212,8 +214,9 @@ set_dispatching_callback(PyObject* self, PyObject* args) {
 
 static PyObject*
 attach_driver(PyObject* self, PyObject* args) {
+    // TODO: check for how to correctly name this variable :)
     char* driver_lib_name;
-    if (!PyArg_ParseTuple(args, "s", &driver_lib_name))
+    if (!PyArg_ParseTuple(args, "s:driver_lib_name", &driver_lib_name))
         return NULL;
     if (indigo_load_driver(driver_lib_name, true, &driver) != INDIGO_OK)
         return PyErr_Format(PyExc_ValueError, "Unable to load requested driver: \"%s\"", driver_lib_name);
@@ -229,19 +232,81 @@ detach_driver(PyObject* self)
 }
 
 
-// TESTING
-// TODO: general mechanism for setting properties from Python code
+// device-level functions
+
+
 static PyObject*
-take_shot(PyObject* self)
+set_property(PyObject* self, PyObject* args)
 {
-    const char * items[] = { CCD_EXPOSURE_ITEM_NAME };
-    double values[1] = { 3.0 };
-    indigo_change_number_property(&pyindigo_client, "CCD Imager Simulator", CCD_EXPOSURE_PROPERTY_NAME, 1, items, values);
+    char* device_name;
+    char* property_name;
+    PyObject* property_class;  // must be one of the classes set with set_property_classes
+    PyObject* item_names_list;
+    Py_ssize_t item_names_list_length;
+    PyObject* item_values_list;
+    Py_ssize_t item_values_list_length;
+    if (!PyArg_ParseTuple(
+            args, "ssOOO",
+            &device_name, &property_name, &property_class, &item_names_list, &item_values_list
+    )) {
+        return NULL;
+    }
+
+    // parse item names from Python list
+    static char *items[INDIGO_MAX_ITEMS];
+    PyObject* item_name;
+    item_names_list_length = PyList_Size(item_names_list);
+    for (int i=0; i<item_names_list_length; i++) {
+        item_name = PyList_GetItem(item_names_list, i);
+        if(!PyUnicode_Check(item_name)) {
+            return PyErr_Format(PyExc_TypeError, "All item names in item_names_list must be Unicode objects!");
+        }
+        items[i] = (char *)malloc(INDIGO_NAME_SIZE);
+        strncpy(items[i], PyUnicode_AsUTF8(item_name), INDIGO_NAME_SIZE);
+    }
+
+    item_values_list_length = PyList_Size(item_names_list);
+    if (item_names_list_length != item_values_list_length) {
+        return PyErr_Format(PyExc_ValueError, "Item name and item value lists must be of the same size!");
+    }
+    // emulating switch (property->type) { case INDIGO_TEXT_VECTOR: ... }
+    if (property_class == TextVectorPropertyClass) {
+        static char *txt_values[INDIGO_MAX_ITEMS];
+        PyObject* txt_item;
+        for (int i = 0; i < item_values_list_length; i++) {
+            txt_item = PyList_GetItem(item_values_list, i);
+            if(!PyUnicode_Check(txt_item)) {
+                return PyErr_Format(PyExc_TypeError, "All item values for text vector property must be Unicode objects!");
+            }
+            txt_values[i] = (char *)malloc(INDIGO_VALUE_SIZE);
+            strncpy(txt_values[i], PyUnicode_AsUTF8(txt_item), INDIGO_VALUE_SIZE);
+            txt_values[i][INDIGO_VALUE_SIZE-1] = 0;
+        }
+
+        indigo_change_text_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)txt_values);
+
+        for (int i = 0; i < item_values_list_length; i++) {
+            free(txt_values[i]);
+        }
+    }
+    else if (property_class == NumberVectorPropertyClass) {
+        double dbl_values[INDIGO_MAX_ITEMS];
+        PyObject* float_item;
+        for (int i = 0; i < item_values_list_length; i++) {
+            float_item = PyList_GetItem(item_values_list, i);
+            if(!PyFloat_Check(float_item)) {
+                return PyErr_Format(PyExc_TypeError, "All item values for number vector property must be float objects!");
+            }
+            dbl_values[i] = PyFloat_AsDouble(float_item);
+        }
+
+        indigo_change_number_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)dbl_values);
+    }
+    else {
+        return PyErr_Format(PyExc_TypeError, "Unknow propety class!");
+    }
     Py_RETURN_NONE;
 }
-
-
-// device-level functions
 
 
 static PyObject*
@@ -267,7 +332,7 @@ static PyMethodDef methods[] = {
     {"detach_driver", (PyCFunction)detach_driver, METH_NOARGS, "request driver detachment from INDIGO bus"},
     {"set_dispatching_callback", (PyCFunction)set_dispatching_callback, METH_VARARGS, "set master-callback"},
     // testing
-    {"take_shot", (PyCFunction)take_shot, METH_NOARGS, ""},
+    {"set_property", (PyCFunction)set_property, METH_VARARGS, "set INDIGO property by device, name, type, list of item names and list of item values"},
     // device-level functions — one driver can have several devices
     // there's no "connect_indigo_device'"function, all devices are connected automatically as they are available
     {"disconnect_device", (PyCFunction)disconnect_device, METH_VARARGS, "request device disconnection from INDIGO bus"},

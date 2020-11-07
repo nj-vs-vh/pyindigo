@@ -1,8 +1,56 @@
 from dataclasses import dataclass
 
-from .base_classes import IndigoProperty
+from abc import ABC
 
-from .items import TextItem, NumberItem, SwitchItem, LightItem, BlobItem
+from typing import ClassVar, Type, Optional
+
+from .property_attributes import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
+from .items import IndigoItem, TextItem, NumberItem, SwitchItem, LightItem, BlobItem
+
+from ..core_ext import set_property
+
+
+@dataclass(repr=False)
+class IndigoProperty(ABC):
+    """Base class for all Indigo properties, concrete classes must specify item_type"""
+    device: str
+    name: str
+    state: Optional[IndigoPropertyState] = None
+    perm: Optional[IndigoPropertyPerm] = None
+    rule: Optional[IndigoSwitchRule] = None
+    item_type: ClassVar[Type[IndigoItem]]
+
+    def __post_init__(self):
+        # enums are passed from C extension as integers and converted to Python Enums
+        self.state = IndigoPropertyState(self.state) if self.state is not None else None
+        self.perm = IndigoPropertyPerm(self.perm) if self.perm is not None else None
+        # item list is always initialized empty and should be built one by one with add_item method
+        self.items = []
+
+    def add_rule(self, rule_int: int):
+        """Used to specify rule attribute for switch properties"""
+        self.rule = IndigoSwitchRule(rule_int)
+
+    def add_item(self, *item_contents):
+        """Used to construct property item-by-item from Indigo client callback C code"""
+        self.items.append(self.item_type(*item_contents))
+
+    def __repr__(self):
+        return (
+            f"{self.name} property of '{self.device}' in {self.state.name} state "
+            + f"(type={self.__class__.__name__}, perm={self.perm.name}, rule={self.rule.name if self.rule else None})"
+        )
+
+    def __str__(self):
+        items_repr = '\n'.join('\t' + str(item) for item in self.items)
+        return repr(self) + (f'\n\titems:\n{items_repr}' if items_repr else '')
+
+    def set(self):
+        set_property(
+            self.device, self.name, self.__class__,
+            [item.name for item in self.items],
+            [item.value for item in self.items]
+        )
 
 
 @dataclass(repr=False)

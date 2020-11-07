@@ -1,11 +1,19 @@
 """Concrete classes for different Indigo item types"""
 
+from abc import ABC
 from dataclasses import dataclass
 from typing import Optional
 
-from .base_classes import IndigoItem
-
 from .property_attributes import IndigoPropertyState
+
+
+@dataclass
+class IndigoItem(ABC):
+    """Base class for all Indigo items, concrete classes specify data type and representation
+
+    See also indigo_item enum
+    """
+    name: str
 
 
 @dataclass
@@ -24,6 +32,9 @@ class NumberItem(IndigoItem):
     max: Optional[float] = None
     step: Optional[float] = None
     target: Optional[float] = None
+
+    def __post_init__(self):
+        self.value = float(self.value)
 
     def __str__(self):
         def dtoa(d: float) -> str:
@@ -45,7 +56,7 @@ class SwitchItem(IndigoItem):
     value: bool
 
     def __post_init__(self):
-        """self.value is passed from C as int, conversion to bool is done"""
+        # self.value is passed from C as int, conversion to bool is done
         self.value = bool(self.value)
 
     def __str__(self):
@@ -57,7 +68,7 @@ class LightItem(IndigoItem):
     value: IndigoPropertyState
 
     def __post_init__(self):
-        """self.value is passed from C as int, conversion to IndigoPropertyState"""
+        # self.value is passed from C as int, conversion to IndigoPropertyState
         self.value = IndigoPropertyState(self.value)
 
     def __str__(self):

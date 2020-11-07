@@ -1,8 +1,7 @@
 import time
 
 import pyindigo.core as indigo
-
-import pyindigo.core_ext as core_ext
+from pyindigo.core.properties import NumberVectorProperty
 
 
 indigo.setup_client()
@@ -23,7 +22,9 @@ indigo.attach_driver('indigo_ccd_simulator')
 
 time.sleep(3)
 
-core_ext.take_shot()
+exposure_prop = NumberVectorProperty('CCD Imager Simulator', 'CCD_EXPOSURE')
+exposure_prop.add_item('EXPOSURE', 3.0)
+exposure_prop.set()
 
 time.sleep(5)
 
