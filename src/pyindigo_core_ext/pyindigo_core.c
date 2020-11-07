@@ -11,7 +11,7 @@
 #include <indigo/indigo_client.h>
 #include <indigo/indigo_version.h>
 
-#include "pyindigo_client.h"
+#include "../pyindigo_client/pyindigo_client.h"
 
 
 // temporaryly working with only one driver!
@@ -67,13 +67,13 @@ set_log_level(PyObject* self, PyObject* args)
 
 
 // Indigo properties modelled with Python classes
-// see src/properties/base_classes.py for base class definition
+// see pyindigo.properties.properties.py for definitions
 
-static PyObject *text_vector_class = NULL;
-static PyObject *number_vector_class = NULL;
-static PyObject *switch_vector_class = NULL;
-static PyObject *light_vector_class = NULL;
-static PyObject *blob_vector_class = NULL;
+static PyObject *TextVectorPropertyClass = NULL;
+static PyObject *NumberVectorPropertyClass = NULL;
+static PyObject *SwitchVectorPropertyClass = NULL;
+static PyObject *LightVectorPropertyClass = NULL;
+static PyObject *BlobVectorPropertyClass = NULL;
 
 static PyObject*
 set_property_classes(PyObject* self, PyObject* args)
@@ -81,7 +81,11 @@ set_property_classes(PyObject* self, PyObject* args)
     if (
         !PyArg_ParseTuple(
             args, "OOOOO",
-            &text_vector_class, &number_vector_class, &switch_vector_class, &light_vector_class, &blob_vector_class
+            &TextVectorPropertyClass,
+            &NumberVectorPropertyClass,
+            &SwitchVectorPropertyClass, 
+            &LightVectorPropertyClass,
+            &BlobVectorPropertyClass
         )
     )
         return NULL;
@@ -102,11 +106,23 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    PyObject* property_object = NULL;
+    PyObject* PropertyClass = NULL;
+    switch (property->type) {
+        case INDIGO_TEXT_VECTOR: PropertyClass = TextVectorPropertyClass; break;
+        case INDIGO_NUMBER_VECTOR: PropertyClass = NumberVectorPropertyClass; break;
+        case INDIGO_SWITCH_VECTOR: PropertyClass = SwitchVectorPropertyClass; break;
+        case INDIGO_LIGHT_VECTOR: PropertyClass = LightVectorPropertyClass; break;
+        case INDIGO_BLOB_VECTOR: PropertyClass = BlobVectorPropertyClass; break;
+        default : {}
+	}
+    PyObject* property_object = PyObject_CallFunction(
+        PropertyClass,
+        "ssii",
+        property->device, indigo_property_name(device->version, property), property->state, property->perm
+    );
 
     switch (property->type) {
         case INDIGO_TEXT_VECTOR:
-            property_object = PyObject_CallFunction(text_vector_class, "ss", indigo_property_name(device->version, property), property->device);
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
@@ -117,7 +133,6 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             }
             break;
         case INDIGO_NUMBER_VECTOR:
-            property_object = PyObject_CallFunction(number_vector_class, "ss", indigo_property_name(device->version, property), property->device);
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
@@ -133,8 +148,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             }
             break;
         case INDIGO_SWITCH_VECTOR:
-            // TODO: save rule for switch vectors (i.e. one of many, many of many)
-            property_object = PyObject_CallFunction(switch_vector_class, "ss", indigo_property_name(device->version, property), property->device);
+            PyObject_CallMethod(property_object, "add_rule", "i", property->rule);
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
@@ -144,7 +158,6 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             }
             break;
         case INDIGO_LIGHT_VECTOR:
-            property_object = PyObject_CallFunction(light_vector_class, "ss", indigo_property_name(device->version, property), property->device);
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
@@ -154,7 +167,6 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
             }
             break;
         case INDIGO_BLOB_VECTOR:
-            property_object = PyObject_CallFunction(blob_vector_class, "ss", indigo_property_name(device->version, property), property->device);
             for (int i = 0; i < property->count; i++) {
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(

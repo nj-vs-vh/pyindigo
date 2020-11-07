@@ -10,7 +10,7 @@
 #include <indigo/indigo_bus.h>
 #include <indigo/indigo_client.h>
 
-#include "pyindigo_core.h"
+#include "../pyindigo_core_ext/pyindigo_core.h"
 
 
 #define PYINDIGO_DEFINE_ACTION "define"

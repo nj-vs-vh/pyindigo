@@ -7,7 +7,7 @@ indigo_root = Path('indigo')
 pyindigo_core_ext_dir = Path('src/pyindigo_core_ext')
 
 pyindigo_core_ext = Extension(
-    "pyindigo.core_ext",
+    "pyindigo.core.core_ext",
     sources=[str(pyindigo_core_ext_dir / 'pyindigo_core.c')],
     library_dirs=[str(indigo_root / 'build/lib/')],
     libraries=['pyindigo_client', 'indigo'],

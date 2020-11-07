@@ -11,7 +11,7 @@ Pyindigo users should import all functions from this module and not from core_ex
 
 from .properties import TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty
 
-from pyindigo.core_ext import *
+from .core_ext import *
 
 set_property_classes(TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty)
 

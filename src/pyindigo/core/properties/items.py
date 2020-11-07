@@ -1,10 +1,11 @@
 """Concrete classes for different Indigo item types"""
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 from .base_classes import IndigoItem
+
+from .property_attributes import IndigoPropertyState
 
 
 @dataclass
@@ -51,14 +52,6 @@ class SwitchItem(IndigoItem):
         return f'{self.name} = {self.value}'
 
 
-class IndigoPropertyState(Enum):
-    """Mocking indigo_property_state enum from indigo_bus.h, comments are preserved"""
-    IDLE = 0  # < property is passive (unused by INDIGO)
-    OK = 1  # < property is in correct state or if operation on property was successful
-    BUSY = 2  # < property is transient state or if operation on property is pending
-    ALERT = 3  # < property is in incorrect state or if operation on property failed
-
-
 @dataclass
 class LightItem(IndigoItem):
     value: IndigoPropertyState
@@ -77,4 +70,5 @@ class BlobItem(IndigoItem):
     format: str
 
     def __str__(self):
-        return f'{len(self.value or [])} bytes BLOB {self.name} in "{self.format}" format'
+        blob_size = len(self.value) if self.value else 0
+        return f'{self.name}: {blob_size} bytes ({blob_size / (1024 ** 2):.2f} MB) BLOB in "{self.format}" format'
