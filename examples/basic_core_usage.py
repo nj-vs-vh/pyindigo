@@ -6,22 +6,7 @@ from pyindigo.core.properties.schemas import CommonProperties, CCDSpecificProper
 
 indigo.setup_client()  # this starts indigo operation
 
-# TODO: model log levels on Python side with Enum
-indigo.set_log_level(0)  # 0 = INDIGO_LOG_ERROR
-
-
-# Dispatching callback is a single Python callable that gets called from all Indigo client
-# callbacks. Action type ('define', 'update', 'delete') is passed as first arg, property object as second
-# TODO: model action types with Enum
-def callback(action, prop):
-    try:
-        print(f"{action}: {str(prop)}")
-    except Exception as e:
-        print(e)
-
-
-indigo.set_dispatching_callback(callback)
-
+indigo.set_indigo_log_level(indigo.LogLevel.TRACE)
 
 indigo.attach_driver('indigo_ccd_simulator')  # currently only one driver at a time is supported
 
