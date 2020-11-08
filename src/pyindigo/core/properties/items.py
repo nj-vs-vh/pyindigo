@@ -1,4 +1,4 @@
-"""Concrete classes for different Indigo item types"""
+"""Indigo items represent elementary data in Indigo"""
 
 from abc import ABC
 from dataclasses import dataclass
@@ -56,7 +56,7 @@ class SwitchItem(IndigoItem):
     value: bool
 
     def __post_init__(self):
-        # self.value is passed from C as int, conversion to bool is done
+        # self.value is passed from C as int, conversion to bool
         self.value = bool(self.value)
 
     def __str__(self):

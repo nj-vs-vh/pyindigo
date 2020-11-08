@@ -9,13 +9,14 @@ Pyindigo users should import all functions from this module and not from core_ex
 
 # flake8: noqa
 
-from .properties import TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty
+from .properties.properties import TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty
 
 from .core_ext import *
 
 set_property_classes(TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty)
 
 # dummy callback just to replace NULL in C code
+# TODO: real dispatching callback
 set_dispatching_callback(lambda action, property: None)
 
 

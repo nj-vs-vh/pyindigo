@@ -1,4 +1,4 @@
-"""Property attribute enumerations, see indigo_bus.h"""
+"""Property attribute enumerations modeled with Python Enums, see indigo_bus.h"""
 
 from enum import Enum
 

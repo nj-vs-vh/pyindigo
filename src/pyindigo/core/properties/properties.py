@@ -1,10 +1,12 @@
+"""Indigo properties represent messages sent to and received from Indigo devices, they contain lists of items"""
+
 from dataclasses import dataclass
 
 from abc import ABC
 
 from typing import ClassVar, Type, Optional
 
-from .property_attributes import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
+from .attribute_enums import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
 from .items import IndigoItem, TextItem, NumberItem, SwitchItem, LightItem, BlobItem
 
 from ..core_ext import set_property
@@ -37,8 +39,10 @@ class IndigoProperty(ABC):
 
     def __repr__(self):
         return (
-            f"{self.name} property of '{self.device}' in {self.state.name} state "
-            + f"(type={self.__class__.__name__}, perm={self.perm.name}, rule={self.rule.name if self.rule else None})"
+            f"{self.name} property of '{self.device}' in {self.state.name if self.state else 'UNKNOWN'} state "
+            + f"(type={self.__class__.__name__}, "
+            + f"perm={self.perm.name if self.perm else 'UNKNOWN'}, "
+            + f"rule={self.rule.name if self.rule else None})"
         )
 
     def __str__(self):
@@ -46,6 +50,9 @@ class IndigoProperty(ABC):
         return repr(self) + (f'\n\titems:\n{items_repr}' if items_repr else '')
 
     def set(self):
+        """Request for change corresponding Indigo property to match self"""
+        if not self.items:
+            raise ValueError("Cannot set empty property, call add_item at least once!")
         set_property(
             self.device, self.name, self.__class__,
             [item.name for item in self.items],

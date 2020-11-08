@@ -271,7 +271,7 @@ set_property(PyObject* self, PyObject* args)
     }
     // emulating switch (property->type) { case INDIGO_TEXT_VECTOR: ... }
     if (property_class == TextVectorPropertyClass) {
-        static char *txt_values[INDIGO_MAX_ITEMS];
+        char *txt_values[INDIGO_MAX_ITEMS];
         PyObject* txt_item;
         for (int i = 0; i < item_values_list_length; i++) {
             txt_item = PyList_GetItem(item_values_list, i);
@@ -301,6 +301,20 @@ set_property(PyObject* self, PyObject* args)
         }
 
         indigo_change_number_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)dbl_values);
+    }
+    else if (property_class == SwitchVectorPropertyClass) {
+        bool bool_values[INDIGO_MAX_ITEMS];
+        PyObject* switch_item;
+        for (int i = 0; i < item_values_list_length; i++) {
+            switch_item = PyList_GetItem(item_values_list, i);
+            if(!PyBool_Check(switch_item)) {
+                return PyErr_Format(PyExc_TypeError, "All item values for number vector property must be float objects!");
+            }
+            if (PyObject_IsTrue(switch_item)) bool_values[i] = true;
+            else bool_values[i] = false;
+        }
+
+        indigo_change_switch_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)bool_values);
     }
     else {
         return PyErr_Format(PyExc_TypeError, "Unknow propety class!");
