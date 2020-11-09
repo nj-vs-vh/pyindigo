@@ -1,12 +1,20 @@
 import time
 
 import pyindigo.core as indigo
+
 from pyindigo.core.properties.schemas import CommonProperties, CCDSpecificProperties
+from pyindigo.core.dispatching_callback import indigo_callback, IndigoDriverAction
+
+
+# print only updates by CCD Imager Simulator
+@indigo_callback(accepts={'action': IndigoDriverAction.UPDATE, 'device': 'CCD Imager Simulator'})
+def print_property(action, prop):
+    print(f"{action.value}: {prop}")
 
 
 indigo.setup_client()  # this starts indigo operation
 
-indigo.set_indigo_log_level(indigo.LogLevel.TRACE)
+indigo.set_indigo_log_level(indigo.LogLevel.ERROR)
 
 indigo.attach_driver('indigo_ccd_simulator')  # currently only one driver at a time is supported
 
