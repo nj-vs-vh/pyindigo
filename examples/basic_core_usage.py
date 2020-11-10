@@ -44,10 +44,10 @@ print(f'setting {prop}')
 print('='*10)
 prop.set()
 time.sleep(1)
-# this usage of schema is equivalent (but much more convenient than) to this code:
-# exposure_prop = NumberVectorProperty('CCD Imager Simulator', 'CCD_EXPOSURE')
-# exposure_prop.add_item('EXPOSURE', 3.0)
-# exposure_prop.set()
+# this usage of schema is equivalent (but much more convenient) to this code:
+# prop = NumberVectorProperty('CCD Imager Simulator', 'CCD_EXPOSURE')
+# prop.add_item('EXPOSURE', 3.0)
+# prop.set()
 
 # disconnect focuser as we don't use it now
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator (focuser)', DISCONNECTED=True)

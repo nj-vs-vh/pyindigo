@@ -1,7 +1,7 @@
 """Dispatching callback is a single Python callable invoked from C code to process all properties"""
 
 from dataclasses import dataclass, fields
-from typing import Optional, Callable, List, Dict, Any
+from typing import Optional, Callable, List, Dict, Any, Type
 from asyncio import AbstractEventLoop, run_coroutine_threadsafe
 from inspect import iscoroutine
 from warnings import warn
@@ -20,7 +20,7 @@ class IndigoCallbackEntry:
     callback: IndigoCallback
 
     action: Optional[IndigoDriverAction] = None
-    property_class: Optional[IndigoProperty] = None
+    property_class: Optional[Type[IndigoProperty]] = None
 
     device: Optional[str] = None
     name: Optional[str] = None

@@ -29,10 +29,6 @@ class IndigoProperty(ABC):
         # item list is always initialized empty and should be built one by one with add_item method
         self.items = []
 
-    def add_rule(self, rule_int: int):
-        """Used to specify rule attribute for switch properties"""
-        self.rule = IndigoSwitchRule(rule_int)
-
     def add_item(self, *item_contents):
         """Used to construct property item-by-item from Indigo client callback C code"""
         self.items.append(self.item_type(*item_contents))
@@ -73,6 +69,10 @@ class NumberVectorProperty(IndigoProperty):
 @dataclass(repr=False)
 class SwitchVectorProperty(IndigoProperty):
     item_type = SwitchItem
+
+    def add_rule(self, rule_int: int):
+        """Used to specify rule attribute for switch properties"""
+        self.rule = IndigoSwitchRule(rule_int)
 
     def __str__(self):
         on_item_names = ', '.join(item.name for item in self.items if item.value)
