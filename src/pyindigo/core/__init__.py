@@ -1,8 +1,9 @@
 """Core Pyindigo functionality.
 
 This package incapsulates
-    (a) C extension module pyindigo.core_ext that actually runs Indigo bus and sends indigo messages.
+    (a) C extension module pyindigo.core.core_ext that actually runs Indigo bus and transmits Indigo messages.
     (b) Python classes representing Indigo items and properties that are constructed and returned by C extension
+    (c) Dispatching callback
 
 Pyindigo users should import all functions from this module and not from core_ext.
 """
@@ -24,18 +25,23 @@ from .dispatching_callback import dispatching_callback
 _set_dispatching_callback(dispatching_callback)
 
 from .core_ext import set_log_level as _set_log_level
-from .enums import IndigoLogLevel as LogLevel
-def set_indigo_log_level(log_level: LogLevel):
+from .enums import IndigoLogLevel
+def set_indigo_log_level(log_level: IndigoLogLevel = IndigoLogLevel.ERROR):
     _set_log_level(log_level.value)
+
+
+from .dispatching_callback import indigo_callback
 
 
 # not necessary but used for linting purposes
 __all__ = [
+    'set_indigo_log_level',
+
     'setup_client',
     'cleanup_client',
-    'LogLevel',
-    'set_indigo_log_level',
     'attach_driver',
     'detach_driver',
     'disconnect_device',
+
+    'indigo_callback'
 ]

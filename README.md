@@ -1,10 +1,10 @@
-# `pyindigo` — Python interface for INDIGO framework
+# pyindigo — Python interface for INDIGO
 
 [INDIGO](https://github.com/indigo-astronomy/indigo) is a framework for multiplatform and distributed astronomy software development. `pyindigo` is a Python package that lets Python interpreter play the role of Indigo client, that is to control Indigo-compatible devices by exchanging messages over Indigo software bus. To learn about Indigo architecture and basic concepts please refer to [documentation](https://github.com/indigo-astronomy/indigo/tree/master/indigo_docs).
 
 ## Contributing
 
-`pyindigo` is in Alpha state, any contribution and/or testing is very welcome! Use Github Issues to report bug/request feature, fork/pull request to contribute or [message](mailto:gosha.vaiman@gmail.com?subject=pyindigo+development) me directly for any question.
+`pyindigo` is in Alpha state, any contribution and/or testing is very welcome! Use Github Issues to report a bug or request a feature, fork/pull request to contribute or [email](mailto:gosha.vaiman@gmail.com?subject=pyindigo+development) me directly for any question. Also check out [TODO](#todo) section.
 
 **Major current limitations**:
 - Only one Indigo driver may be used at once
@@ -47,7 +47,7 @@ cd ../..
 python3 setup.py install
 ```
 
-1. By default Python will be unable to find `pyindigo_client` shared library (as well as other Indigo binaries) and `ImportError: libpyindigo_client.so: cannot open shared object file: No such file or directory` will be raised. Temporary workaround is to modify `LD_LIBRARY_PATH` environment variable to include `pyindigo/indigo/build/lib` directory. When working in virtual environment, one can add the following line to `venv/bin/activate` script, otherwise it can be set manually or in `~/.bashrc`.
+5. By default Python will be unable to find `pyindigo_client` shared library (as well as other Indigo binaries) and `ImportError: libpyindigo_client.so: cannot open shared object file: No such file or directory` will be raised. Temporary workaround is to modify `LD_LIBRARY_PATH` environment variable to include `pyindigo/indigo/build/lib` directory. When working in virtual environment, one can add the following line to `venv/bin/activate` script, otherwise it can be set manually or in `~/.bashrc`.
 
 ```bash
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$(pwd)/indigo/build/lib"
@@ -67,10 +67,11 @@ python examples/basic_core_usage.py
 
 - `pyindigo.core` package provides direct interface to Indigo functionality. It may be idiomatically imported as `import pyindigo.core as indigo`
   - `pyindigo.core.core_ext` is an extension module writen in C, directly linked to `indigo_bus` and `pyindigo_client` shared libraries. It should not be imported in user-level code.
-  - `pyindigo.core.properties` package provides Python classes modelling [Indigo properties](#Properties)
-  - `pyindigo.core.dispatching_callback` module provides mechanism to set [callback](#Listening-for-property-definition/update/deletion) that will be invoked on property definition/update/deletion.
+  - `pyindigo.core.properties` package provides Python classes modelling [Indigo properties](#properties)
+  - `pyindigo.core.dispatching_callback` module provides mechanism to set [callback](#listening-for-property-definitionupdatedeletion) that will be invoked on property definition/update/deletion.
   - `pyindigo.core.enums` module provides Python Enum classes modelling enumerations used in Indigo (log level, driver action, etc)
-- `pyindigo.bus`, `pyindigo.driver`, `pyindigo.device` — object-oriented wrappers around Indigo functions, WIP
+- `pyindigo.enums` module exposes Indigo-related Enum classes for convenience
+- (Under development) `pyindigo.bus`, `pyindigo.driver`, `pyindigo.device` — object-oriented wrappers around Indigo functions
 
 
 ### Properties
@@ -95,7 +96,8 @@ Rule, state, and permission property attributes are stored as enumerations in C 
 Properties can be instantiated from Python code directly, but it requires copy-pasting property and item names, as `add_item` and `add_rule` methods are intended to be called from C extension code, not high-level Python code. To create properties conviniently and idiomatically, `PropertySchema` objects are used. These are helper objects defined in [`pyindigo.core.properties.schemas`](https://github.com/nj-vs-vh/pyindigo/blob/main/src/pyindigo/core/properties/schemas.py), that store information from [property tables](https://github.com/indigo-astronomy/indigo/blob/master/indigo_docs/PROPERTIES.md) in a convenient, ready-to-use way. Example:
 
 ```python
-from pyindigo.core.properties.schemas import CommonProperties, CCDSpecificProperties  # namespace classes
+# namespace classes
+from pyindigo.core.properties import CommonProperties, CCDSpecificProperties
 
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator', CONNECTED=True)
 prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPOSURE=3)
@@ -107,7 +109,7 @@ Only `CommonProperties` and `CCDSpecificProperties` namespaces are available by 
 
 #### Property setting
 
-To send updated or newly created property to driver, `IndigoProperty.set()` method is used. It wraps C extension function that converts Python object fields to native C data types and calls appropriate Indigo function (i.e. `indigo_change_text_property`). Using property from previous example, to change CCD device's `CCD_EXPOSURE` property (i.e. request shot exposure of 3 seconds), one would write:
+To send updated or newly created property to driver, `IndigoProperty.set()` method is used. It wraps C extension function that converts Python object fields to native C data types and calls appropriate Indigo function (i.e. `indigo_change_text_property`). Using property from the previous example, to change CCD device's `CCD_EXPOSURE` property (i.e. request shot exposure of 3 seconds), one would write:
 
 ```python
 prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPOSURE=3)
@@ -120,7 +122,7 @@ prop.set()
 
 ```python
 @indigo_callback
-def _(action: IndigoDriverAction, prop: IndigoProperty):
+def cbck(action: IndigoDriverAction, prop: IndigoProperty):
     print(f"{action}: {prop}")
 ```
 
@@ -131,14 +133,14 @@ Dispatching callback can also do some basic filtering for you and invoke your ca
 ```python
 @indigo_callback(
     accepts={
-        'action': IndigoDriverAction.UPDATE
+        'action': IndigoDriverAction.UPDATE,
         'device': 'CCD Imager simulator',
         'name': CommonProperties.CONNECTION.property_name,
         'state': IndigoPropertyState.OK
     },
     run_times=3
 )
-def _(action: IndigoDriverAction, prop: IndigoProperty):
+def cbck(action: IndigoDriverAction, prop: IndigoProperty):
     process(prop)
 ```
 
@@ -148,7 +150,7 @@ There's also native support for `asyncio` coroutines as callbacks. In this case 
 
 ```python
 @indigo_callback(loop=loop)
-async def coroutine_callback(action: IndigoDriverAction, prop: IndigoProperty):
+async def coroutine_cbck(action: IndigoDriverAction, prop: IndigoProperty):
     ...
 ```
 
@@ -174,6 +176,6 @@ indigo_callback(my_callback, accepts={'state': IndigoPropertyState.ALERT})
 
 - installing indigo — where to put executables and custom client? temp solution is LD_LIBRARY_PATH set to `pyindigo/indigo/build/lib`
 - enable_blob_mode — how to use it and do I need to worry about it
-- working with remote devices — should be easy (see indigo_cffi package)
+- working with remote devices — should be easy
 - config property — how does it work? why wasn't ZWO camera able to start until I created config file manually?
 - licensing?
