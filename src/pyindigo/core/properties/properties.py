@@ -45,6 +45,10 @@ class IndigoProperty(ABC):
         items_repr = '\n'.join('\t' + str(item) for item in self.items)
         return repr(self) + (f'\n\titems:\n{items_repr}' if items_repr else '')
 
+    @property
+    def items_dict(self):
+        return {item.name: item.value for item in self.items}
+
     def set(self):
         """Request for change corresponding Indigo property to match self"""
         if not self.items:

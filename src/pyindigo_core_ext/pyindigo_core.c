@@ -300,7 +300,7 @@ set_property(PyObject* self, PyObject* args)
             dbl_values[i] = PyFloat_AsDouble(float_item);
         }
 
-        indigo_change_number_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)dbl_values);
+        indigo_change_number_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const double *)dbl_values);
     }
     else if (property_class == SwitchVectorPropertyClass) {
         bool bool_values[INDIGO_MAX_ITEMS];
@@ -314,7 +314,7 @@ set_property(PyObject* self, PyObject* args)
             else bool_values[i] = false;
         }
 
-        indigo_change_switch_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const char **)bool_values);
+        indigo_change_switch_property(&pyindigo_client, device_name, property_name, item_values_list_length, (const char **)items, (const bool *)bool_values);
     }
     else {
         return PyErr_Format(PyExc_TypeError, "Unknow propety class!");

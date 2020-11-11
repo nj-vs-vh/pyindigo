@@ -4,7 +4,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Optional
 
-from .property_attributes import IndigoPropertyState
+from .attribute_enums import IndigoPropertyState
 
 
 @dataclass

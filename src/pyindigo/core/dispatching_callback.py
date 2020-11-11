@@ -6,7 +6,7 @@ from asyncio import AbstractEventLoop, run_coroutine_threadsafe
 from inspect import iscoroutine
 from warnings import warn
 
-from .properties.properties import IndigoProperty
+from .properties import IndigoProperty
 from .properties.attribute_enums import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
 from .enums import IndigoDriverAction
 
@@ -65,15 +65,27 @@ class IndigoCallbackEntry:
                     self.run_times -= 1
 
 
-registered_callbacks: List[IndigoCallbackEntry] = []
+registered_callback_entries: List[IndigoCallbackEntry] = []
+
+
+verbose = False
+
+
+def set_verbosity(v: bool):
+    global verbose
+    verbose = v
 
 
 def dispatching_callback(action_string: str, prop: IndigoProperty):
-    global registered_callbacks
+    if verbose:
+        print(f"{action_string}: {prop}")
+    global registered_callback_entries
     action = IndigoDriverAction(action_string)
-    for i, callback_entry in enumerate(registered_callbacks):
+    for i, callback_entry in enumerate(registered_callback_entries):
         callback_entry.run_if_applied(action, prop)
-    registered_callbacks = [entry for entry in registered_callbacks if entry.run_times is None or entry.run_times > 0]
+    registered_callback_entries = [
+        entry for entry in registered_callback_entries if entry.run_times is None or entry.run_times > 0
+    ]
 
 
 def indigo_callback(
@@ -116,10 +128,18 @@ def indigo_callback(
     # TODO: support 'accepts' as a List if possible (i.e. for accept=[IndigoPropertyState.OK, IndigoPropertyPerm.RO])
 
     def decorator(decorated_callback):
-        registered_callbacks.append(IndigoCallbackEntry(decorated_callback, **accepts, run_times=run_times, loop=loop))
+        registered_callback_entries.append(
+            IndigoCallbackEntry(decorated_callback, **accepts, run_times=run_times, loop=loop)
+        )
         return decorated_callback
 
     if callback is None:  # when using as decorator factory
         return decorator
     else:  # when using as decorator
         return decorator(callback)
+
+
+def discard_indigo_callback(callback: Callable):
+    """Discard previously registered indigo callback"""
+    global registered_callback_entries
+    registered_callback_entries = [entry for entry in registered_callback_entries if entry.callback != callback]
