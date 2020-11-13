@@ -4,7 +4,8 @@ from dataclasses import dataclass, fields
 from typing import Optional, Callable, List, Dict, Any, Type
 from asyncio import AbstractEventLoop, run_coroutine_threadsafe
 from inspect import iscoroutine
-from warnings import warn
+
+import pyindigo.logging as logging
 
 from .properties import IndigoProperty
 from .properties.attribute_enums import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
@@ -37,7 +38,7 @@ class IndigoCallbackEntry:
         if iscoroutine(self.callback) and self.loop is None:
             raise ValueError("loop parameter must be specified when registering coroutines!")
         if not iscoroutine(self.callback) and self.loop is not None:
-            warn("loop parameter is specified, but registered callable is not a coroutine!")
+            logging.warning("loop parameter is specified, but registered callable is not a coroutine!")
 
     def accepts(self, action: IndigoDriverAction, prop: IndigoProperty) -> bool:
         if self.action is not None and action is not self.action:
@@ -51,15 +52,24 @@ class IndigoCallbackEntry:
                 return False
         return True
 
-    def run_if_applied(self, action: IndigoDriverAction, prop: IndigoProperty):
+    def run_if_accepted(self, action: IndigoDriverAction, prop: IndigoProperty):
         if self.accepts(action, prop):
+            if logging.pyindigoConfig.log_callback_dispatching:
+                logging.info(
+                    f"{prop.name} property {action.value} is passed to {self.callback.__name__} "
+                    + f"(defined in {self.callback.__module__})"
+                )
             try:
                 if iscoroutine(self.callback):
                     run_coroutine_threadsafe(self.callback(action, prop), self.loop)
                 else:
                     self.callback(action, prop)
-            except Exception:
-                pass
+            except Exception as e:
+                if logging.pyindigoConfig.log_callback_errors:
+                    logging.warning(
+                        f"Error in callback {self.callback.__name__} (defined in {self.callback.__module__}):\n"
+                        + str(e)
+                    )
             finally:
                 if self.run_times is not None:
                     self.run_times -= 1
@@ -68,21 +78,13 @@ class IndigoCallbackEntry:
 registered_callback_entries: List[IndigoCallbackEntry] = []
 
 
-verbose = False
-
-
-def set_verbosity(v: bool):
-    global verbose
-    verbose = v
-
-
 def dispatching_callback(action_string: str, prop: IndigoProperty):
-    if verbose:
-        print(f"{action_string}: {prop}")
+    if logging.pyindigoConfig.log_driver_actions:
+        logging.info(f"Driver action:\n{action_string}: {prop}")
     global registered_callback_entries
     action = IndigoDriverAction(action_string)
     for i, callback_entry in enumerate(registered_callback_entries):
-        callback_entry.run_if_applied(action, prop)
+        callback_entry.run_if_accepted(action, prop)
     registered_callback_entries = [
         entry for entry in registered_callback_entries if entry.run_times is None or entry.run_times > 0
     ]
@@ -125,8 +127,6 @@ def indigo_callback(
         run_times specifies how many times callback will be run before being discarded;
         loop, if coroutine is decorated, specifies asyncio loop to run it in.
     """
-    # TODO: support 'accepts' as a List if possible (i.e. for accept=[IndigoPropertyState.OK, IndigoPropertyPerm.RO])
-
     def decorator(decorated_callback):
         registered_callback_entries.append(
             IndigoCallbackEntry(decorated_callback, **accepts, run_times=run_times, loop=loop)

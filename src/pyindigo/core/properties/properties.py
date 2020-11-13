@@ -1,10 +1,12 @@
 """Indigo properties represent messages sent to and received from Indigo devices, they contain lists of items"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from abc import ABC
 
-from typing import ClassVar, Type, Optional
+from typing import ClassVar, Type, Optional, List
+
+import pyindigo.logging as logging
 
 from .attribute_enums import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
 from .items import IndigoItem, TextItem, NumberItem, SwitchItem, LightItem, BlobItem
@@ -20,14 +22,13 @@ class IndigoProperty(ABC):
     state: Optional[IndigoPropertyState] = None
     perm: Optional[IndigoPropertyPerm] = None
     rule: Optional[IndigoSwitchRule] = None
+    items: List[IndigoItem] = field(default_factory=list)
     item_type: ClassVar[Type[IndigoItem]]
 
     def __post_init__(self):
         # enums are passed from C extension as integers and converted to Python Enums
         self.state = IndigoPropertyState(self.state) if self.state is not None else None
         self.perm = IndigoPropertyPerm(self.perm) if self.perm is not None else None
-        # item list is always initialized empty and should be built one by one with add_item method
-        self.items = []
 
     def add_item(self, *item_contents):
         """Used to construct property item-by-item from Indigo client callback C code"""
@@ -53,6 +54,8 @@ class IndigoProperty(ABC):
         """Request for change corresponding Indigo property to match self"""
         if not self.items:
             raise ValueError("Cannot set empty property, call add_item at least once!")
+        if logging.pyindigoConfig.log_property_set:
+            logging.info(f"Setting property: {self}")
         set_property(
             self.device, self.name, self.__class__,
             [item.name for item in self.items],

@@ -3,6 +3,8 @@ from enum import Enum, auto
 
 from typing import Dict, Any, Optional
 
+import pyindigo.logging as logging
+
 from .core.properties import IndigoProperty, TextVectorProperty
 from .core.properties.attribute_enums import IndigoPropertyState
 from .core.properties.schemas import CommonProperties
@@ -25,16 +27,18 @@ class IndigoDevice:
     status: IndigoDeviceStatus = IndigoDeviceStatus.DISCONNECTED
 
     def __post_init__(self):
-        @indigo_callback(
+        @self.indigo_callback(
             accepts={'action': IndigoDriverAction.UPDATE, 'name': CommonProperties.CONNECTION.property_name}
         )
         def connection_cbk(action: IndigoDriverAction, prop: IndigoProperty):
             if prop.state is IndigoPropertyState.OK:
-                if prop.items_dict['CONNECTED']:
+                if prop.items_dict['CONNECT']:
                     self.status = IndigoDeviceStatus.CONNECTED
                 else:
                     self.status = IndigoDeviceStatus.DISCONNECTED
-            else:
+            elif prop.state is IndigoPropertyState.ALERT:
+                if logging.pyindigoConfig.log_device_connection:
+                    logging.warning(f"{self.name} connection failed")
                 self.status = IndigoDeviceStatus.FAILED
 
     @classmethod
@@ -51,15 +55,21 @@ class IndigoDevice:
         return indigo_callback(*args, **kwargs)
 
     def connect(self, blocking: bool = False, timeout: Optional[float] = None):
+        if logging.pyindigoConfig.log_device_connection:
+            logging.info(f"Connecting {self.name} device...")
         set_property_with_confirmation(
-            CommonProperties.CONNECTION.implement(self.name, CONNECTED=True),
-            lambda: self.status is IndigoDeviceStatus.CONNECTED,
-            blocking, timeout
+            prop=CommonProperties.CONNECTION.implement(self.name, CONNECTED=True),
+            confirmation=lambda: self.status is IndigoDeviceStatus.CONNECTED,
+            blocking=blocking,
+            timeout=timeout
         )
 
     def disconnect(self, blocking: bool = False, timeout: Optional[float] = None):
+        if logging.pyindigoConfig.log_device_connection:
+            logging.info(f"Disconnecting {self.name} device...")
         set_property_with_confirmation(
-            CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
-            lambda: self.status is IndigoDeviceStatus.CONNECTED,
-            blocking, timeout
+            prop=CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
+            confirmation=lambda: self.status is IndigoDeviceStatus.DISCONNECTED,
+            blocking=blocking,
+            timeout=timeout
         )

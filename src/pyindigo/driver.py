@@ -47,6 +47,16 @@ class IndigoDriver:
             detach_driver()
             self.attached = False
 
+    def find_device(self, name: str) -> IndigoDevice:
+        for equal in (lambda s1, s2: s1.lower() == s2.lower(), lambda s1, s2: s2.lower().startswith(s1.lower())):
+            for device in self.devices:
+                if equal(name, device.name):
+                    return(device)
+        else:
+            raise ValueError(
+                f"No '{name}' device found, available devices are\n\t{'; '.join(dev.name for dev in self.devices)}"
+            )
+
 
 if __name__ == "__main__":
     driver = IndigoDriver('indigo_ccd_simulator')
