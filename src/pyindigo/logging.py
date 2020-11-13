@@ -14,11 +14,15 @@ import inspect
 
 
 class pyindigoConfig:
+    # used with logger.info and True by default
     log_property_set: bool = False
     log_driver_actions: bool = False
     log_callback_dispatching: bool = False
-    lop_callback_errors: bool = True
     log_device_connection: bool = False
+
+    # used with logger.warning and True by default
+    lop_callback_exceptions: bool = True
+    log_alert_properties: bool = True
 
     def __new__(cls, *args, **kwargs):
         """Not an actual instantiation, but setting class attributes, mocking logging.basicConfig"""

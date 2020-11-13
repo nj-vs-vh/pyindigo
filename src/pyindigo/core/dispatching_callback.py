@@ -65,10 +65,10 @@ class IndigoCallbackEntry:
                 else:
                     self.callback(action, prop)
             except Exception as e:
-                if logging.pyindigoConfig.log_callback_errors:
+                if logging.pyindigoConfig.lop_callback_exceptions:
                     logging.warning(
                         f"Error in callback {self.callback.__name__} (defined in {self.callback.__module__}):\n"
-                        + str(e)
+                        + f'{type(e).__name__}: {e}'
                     )
             finally:
                 if self.run_times is not None:
@@ -143,3 +143,9 @@ def discard_indigo_callback(callback: Callable):
     """Discard previously registered indigo callback"""
     global registered_callback_entries
     registered_callback_entries = [entry for entry in registered_callback_entries if entry.callback != callback]
+
+
+@indigo_callback(accepts={'state': IndigoPropertyState.ALERT})
+def log_alert_props(action, prop):
+    if logging.pyindigoConfig.log_alert_properties:
+        logging.warning(f'\n! ALERT property !\n{action}: {prop}')

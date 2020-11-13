@@ -1,7 +1,7 @@
 import time
 
 from pyindigo.driver import IndigoDriver
-from pyindigo.core.properties import IndigoProperty, CCDSpecificProperties
+from pyindigo.core.properties import IndigoProperty, CCDSpecificProperties, BlobVectorProperty
 from pyindigo.enums import IndigoPropertyState, IndigoDriverAction, IndigoDeviceStatus
 
 import pyindigo.logging as logging
@@ -34,12 +34,12 @@ image_saved = False
     accepts={
         'state': IndigoPropertyState.OK,
         'action': IndigoDriverAction.UPDATE,
-        'property_class': CCDSpecificProperties.CCD_FRAME.property_class
+        'property_class': BlobVectorProperty
     }
 )
 def save_image_to_file(action, prop: IndigoProperty):
     try:
-        print('saving image...')
+        print('\nsaving image...\n')
         with open('test.fits', 'wb') as f:
             f.write(prop.items[0].value)
     except Exception:
@@ -49,7 +49,7 @@ def save_image_to_file(action, prop: IndigoProperty):
         image_saved = True
 
 
-CCDSpecificProperties.CCD_EXPOSURE.implement(imager.name, 5).set()
+CCDSpecificProperties.CCD_EXPOSURE.implement(imager.name, 10).set()
 
 
 while not image_saved:
