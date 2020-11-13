@@ -5,7 +5,16 @@ from .core.properties.attribute_enums import IndigoPropertyPerm, IndigoPropertyS
 
 from .core.enums import IndigoDriverAction, IndigoLogLevel
 
+from .device import IndigoDeviceStatus
+
 
 __all__ = [
-    'IndigoPropertyPerm', 'IndigoPropertyState', 'IndigoSwitchRule', 'IndigoDriverAction', 'IndigoLogLevel'
+    'IndigoPropertyPerm',
+    'IndigoPropertyState',
+    'IndigoSwitchRule',
+
+    'IndigoDriverAction',
+    'IndigoLogLevel',
+
+    'IndigoDeviceStatus'
 ]
