@@ -7,10 +7,15 @@ from pyindigo.core import indigo_callback
 from pyindigo.enums import IndigoDriverAction, IndigoLogLevel
 
 
-# print only updates by CCD Imager Simulator
-@indigo_callback(accepts={'action': IndigoDriverAction.UPDATE, 'device': 'CCD Imager Simulator'})
+@indigo_callback
 def print_property(action, prop):
     print(f"{action.value}: {prop}")
+
+# we can also constrain callback to accept only certain properties
+@indigo_callback(accepts={'action': IndigoDriverAction.UPDATE, 'device': 'CCD Imager Simulator'})
+def print_property_colored(action, prop):
+    # some processing happens heere
+    pass
 
 
 indigo.setup_client()  # this starts indigo operation
@@ -25,36 +30,28 @@ time.sleep(1)
 
 # connect CCD Imager Simulator and focuser by creating connection property object and setting it (= sending to device)
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator', CONNECTED=True)
-print('='*10)
-print(f'setting {prop}')
-print('='*10)
+print(f'\n\nSetting {prop}\n\n')
 prop.set()
 time.sleep(1)
 
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator (focuser)', CONNECTED=True)
-print('='*10)
-print(f'setting {prop}')
-print('='*10)
+print(f'\n\nSetting {prop}\n\n')
 prop.set()
 time.sleep(1)
 
 # create property with exposure request and set it
 prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', 4)
-print('='*10)
-print(f'setting {prop}')
-print('='*10)
+print(f'\n\nSetting {prop}\n\n')
 prop.set()
 time.sleep(1)
-# this usage of schema is equivalent (but much more convenient) to this code:
+# this usage of schema is equivalent (but much more convenient) to this:
 # prop = NumberVectorProperty('CCD Imager Simulator', 'CCD_EXPOSURE')
 # prop.add_item('EXPOSURE', 3.0)
 # prop.set()
 
 # disconnect focuser as we don't use it now
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator (focuser)', DISCONNECTED=True)
-print('='*10)
-print(f'setting {prop}')
-print('='*10)
+print(f'\n\nSetting {prop}\n\n')
 prop.set()
 
 time.sleep(5)  # wait for exposure

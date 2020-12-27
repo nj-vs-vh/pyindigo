@@ -1,6 +1,9 @@
-"""Custom logging module wrapping standard logging, but with custon config options
+"""Custom logging module wrapping standard logging, but with special pyindigoConfig.
+It mostly serves debug purposes, logging low-level stuff like property events.
 
-Intended use:
+See https://docs.python.org/3/howto/logging.html for info on basic logging
+
+Example use:
 >>> import pyindigo.logging as logging
 >>> logging.basicConfig(filename='pyindigo.log', encoding='utf-8', level=logging.DEBUG)
 >>> logging.pyindigoConfig(log_driver_actions=True, log_property_set=True)
@@ -14,18 +17,17 @@ import inspect
 
 
 class pyindigoConfig:
-    # used with logger.info and True by default
+    # info
     log_property_set: bool = False
     log_driver_actions: bool = False
     log_callback_dispatching: bool = False
     log_device_connection: bool = False
-
-    # used with logger.warning and True by default
+    # warnings
     lop_callback_exceptions: bool = True
-    log_alert_properties: bool = True
+    log_alert_properties: bool = False
 
     def __new__(cls, *args, **kwargs):
-        """Not an actual instantiation, but setting class attributes, mocking logging.basicConfig"""
+        """Not an actual instantiation, but setting class attributes, mocking logging.basicConfig behaviour"""
         if len(args) == 1 and isinstance(args[0], bool):
             for name, flag in inspect.getmembers(cls, lambda val: isinstance(val, bool)):
                 setattr(cls, name, args[0])

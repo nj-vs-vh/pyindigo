@@ -1,4 +1,8 @@
 pip uninstall pyindigo -y
-rm -rf ./build ./dist ./src/pyindigo.egg-info
+sudo rm -rf ./build ./dist ./src/pyindigo.egg-info
+
+cd src/pyindigo_client
+make reinstall
+cd ../..
 
 python setup.py install

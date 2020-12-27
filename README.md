@@ -6,54 +6,42 @@
 
 `pyindigo` is in Alpha state, any contribution and/or testing is very welcome! Use Github Issues to report a bug or request a feature, fork/pull request to contribute or [email](mailto:gosha.vaiman@gmail.com?subject=pyindigo+development) me directly for any question. Also check out [TODO](#todo) section.
 
-**Major current limitations**:
-- Only one Indigo driver may be used at once
-- Tested only on Linux machine
+### Major current limitations
+
+* only one driver at a time is available
+* no remote drivers are yet supported
+* only on Linux
+
 
 ## Installation
 
-Package is not yet available via `pip`, this step describes building it from source.
+Current installation only works on Linux, and tested specifically on Ubuntu. Installation for other systems is TBD.
 
-1. Clone this repository
+1. Prerequisite for this package is Indigo itself. Folow [building instructions](https://github.com/indigo-astronomy/indigo#how-to-build-indigo) for your system, make sure to use `make install` option instead of `make build` to make Indigo available system-wide.
+
+2. Clone this repository
 
 ```bash
 git clone https://github.com/nj-vs-vh/pyindigo.git
-```
-
-2. Clone Indigo repository to `pyindigo/indigo` subdirectory and build it. If it's already cloned and built on your machine elsewhere, copy or create a symlink to it.
-
-```bash
 cd pyindigo
-git clone https://github.com/indigo-astronomy/indigo.git indigo
-cd indigo
-# building instructions by Indigo for Ubuntu, for other platforms refer to
-# https://github.com/indigo-astronomy/indigo#how-to-build-indigo
-sudo apt-get install build-essential autoconf autotools-dev libtool cmake libudev-dev libavahi-compat-libdnssd-dev libusb-1.0-0-dev libcurl4-gnutls-dev libgphoto2-dev libz-dev git curl bsdmainutils
-sudo apt-get remove libraw1394-dev
-make all
 ```
 
-3. Build `pyindigo_client`. This will copy client's shared library to other indigo libraries (`indigo/build/lib`)
+3. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/build/lib`) and set `LD_LIBRARY_PATH` variable to include Indigo libraries.
 
 ```bash
-cd ../src/pyindigo_client
+cd src/pyindigo_client
 make install
 ```
 
-4. Install the Python package
+4. Finally, install the Python package. To let Python link with `pyindigo_client` shared lib, also set `LD_LIBRARY_PATH` to include stadard `/usr/local/lib` location (for repeatable use this may be safely done in .bashrc, or in virtual environment activation script).
 
 ```bash
 cd ../..
 python3 setup.py install
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/usr/local/lib"
 ```
 
-5. By default Python will be unable to find `pyindigo_client` shared library (as well as other Indigo binaries) and `ImportError: libpyindigo_client.so: cannot open shared object file: No such file or directory` will be raised. Temporary workaround is to modify `LD_LIBRARY_PATH` environment variable to include `pyindigo/indigo/build/lib` directory. When working in virtual environment, one can add the following line to `venv/bin/activate` script, otherwise it can be set manually or in `~/.bashrc`.
-
-```bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$(pwd)/indigo/build/lib"
-```
-
-6. Run some examples to get started!:
+5. Run the example to get started!
 
 ```bash
 python examples/basic_core_usage.py
@@ -71,7 +59,7 @@ python examples/basic_core_usage.py
   - `pyindigo.core.dispatching_callback` module provides mechanism to set [callback](#listening-for-property-definitionupdatedeletion) that will be invoked on property definition/update/deletion.
   - `pyindigo.core.enums` module provides Python Enum classes modelling enumerations used in Indigo (log level, driver action, etc)
 - `pyindigo.enums` module exposes Indigo-related Enum classes for convenience
-- (Under development) `pyindigo.bus`, `pyindigo.driver`, `pyindigo.device` — object-oriented wrappers around Indigo functions
+- (WIP) `pyindigo.models` — object-oriented wrappers around Indigo functions
 
 
 ### Properties
@@ -93,7 +81,7 @@ Rule, state, and permission property attributes are stored as enumerations in C 
 
 #### Property schemas
 
-Properties can be instantiated from Python code directly, but it requires copy-pasting property and item names, as `add_item` and `add_rule` methods are intended to be called from C extension code, not high-level Python code. To create properties conviniently and idiomatically, `PropertySchema` objects are used. These are helper objects defined in [`pyindigo.core.properties.schemas`](https://github.com/nj-vs-vh/pyindigo/blob/main/src/pyindigo/core/properties/schemas.py), that store information from [property tables](https://github.com/indigo-astronomy/indigo/blob/master/indigo_docs/PROPERTIES.md) in a convenient, ready-to-use way. Example:
+Properties can be instantiated from Python code directly, but it requires copy-pasting property and item names, as `add_item` and `add_rule` methods are intended to be called from C extension code, not high-level Python code. To create properties conviniently and idiomatically, `PropertySchema` objects can be used. These are helper objects defined in [`pyindigo.core.properties.schemas`](https://github.com/nj-vs-vh/pyindigo/blob/main/src/pyindigo/core/properties/schemas.py), that store information from [property tables](https://github.com/indigo-astronomy/indigo/blob/master/indigo_docs/PROPERTIES.md) in a convenient, ready-to-use way. Example:
 
 ```python
 # namespace classes
@@ -105,8 +93,8 @@ prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPO
 
 Here `CommonProperties`, `CCDSpecificProperties` are namespace classes corresponding to different property tables, `PropertyNamespace.PROP` is a `PropertySchema`, and with its `implement` method `IndigoProperty` instance is created with specified device and items from keyword args. This way of property instantiation prevents typos in property or item names, and results in more readable code.
 
-Only `CommonProperties` and `CCDSpecificProperties` namespaces are available by now, others are soon to be added.
-
+Only `CommonProperties` and `CCDSpecificProperties` namespaces are available by now, others are WIP.
+v
 #### Property setting
 
 To send updated or newly created property to driver, `IndigoProperty.set()` method is used. It wraps C extension function that converts Python object fields to native C data types and calls appropriate Indigo function (i.e. `indigo_change_text_property`). Using property from the previous example, to change CCD device's `CCD_EXPOSURE` property (i.e. request shot exposure of 3 seconds), one would write:
@@ -122,11 +110,11 @@ prop.set()
 
 ```python
 @indigo_callback
-def cbck(action: IndigoDriverAction, prop: IndigoProperty):
+def my_callback(action: IndigoDriverAction, prop: IndigoProperty):
     print(f"{action}: {prop}")
 ```
 
-This code will register function in dispatching callback and all messages from drivers will be passed to it. Please note that exceptions in callbacks are silently catched by dispatching callback by default, so do your own exception handling.
+This code will register function in dispatching callback and all messages from drivers will be passed to it. Please note that exceptions in callbacks are silently catched by dispatching callback by default, so you should do your own exception handling.
 
 Dispatching callback can also do some basic filtering for you and invoke your callback only with specific properties and specific driver action.
 
@@ -140,8 +128,8 @@ Dispatching callback can also do some basic filtering for you and invoke your ca
     },
     run_times=3
 )
-def cbck(action: IndigoDriverAction, prop: IndigoProperty):
-    process(prop)
+def my_callback(action: IndigoDriverAction, prop: IndigoProperty):
+    some_processing(prop)
 ```
 
 In this case only first 3 CONNECTION property updates from CCD Imager simulator in OK state will be passed to the callback, then it will be discarded. `accepts` argument is a `dict` with the following keys and expected value types: `action`: `IndigoDriverAction`, `property_class`: `TypeVar[IndigoProperty]`, `device`, `name`, `state`, `perm`, `rule` all expect the same types as corresponding fields of `IndigoProperty` class.
@@ -150,8 +138,8 @@ There's also native support for `asyncio` coroutines as callbacks. In this case 
 
 ```python
 @indigo_callback(loop=loop)
-async def coroutine_cbck(action: IndigoDriverAction, prop: IndigoProperty):
-    ...
+async def coroutine_callback(action: IndigoDriverAction, prop: IndigoProperty):
+    await some_asynchronous_processing(prop)
 ```
 
 Finally, when using `indigo_callback` as a decorator, callback is registered at parse time. To control callback registration time precisely at runtime, one would simply use
@@ -161,21 +149,19 @@ indigo_callback(my_callback, accepts={'state': IndigoPropertyState.ALERT})
 ```
 
 ## TODO:
-
+- testing with real devices
 - testing (unit tests on modules, integration with CCD Imager Simulator)
-- test coroutine callbacks
-- namespacing — more convenient imports
-- helper func for 'ensuring property set' — one-time confirmation callback and 'blocking await' with `while True` until callback returns
-- OOP bus-driver-device modelling
-- property schemas for the rest of the properties (parse automatically?)
 - multidriver mode — C extension upgrade
-- `.pyi` file for core_ext module
+- working with remote devices — should be easy, but I haven
 - PPA publishing
+- OOP bus-driver-device modelling
+- helper func for 'ensuring property set' — one-time confirmation callback and 'blocking await' with `while True` until callback returns
+- property schemas for the rest of the properties (parse automatically?)
+- `.pyi` file for core_ext module
 
 ### Open questions:
-
-- installing indigo — where to put executables and custom client? temp solution is LD_LIBRARY_PATH set to `pyindigo/indigo/build/lib`
-- enable_blob_mode — how to use it and do I need to worry about it
-- working with remote devices — should be easy
-- config property — how does it work? why wasn't ZWO camera able to start until I created config file manually?
-- licensing?
+- Current installation process assumes that Indigo is installed i.e. all files are copied to `/usr/local/...`. This is not easily portable, and requires modifying system directories with sudo. Is there a better way? Some kind of portable install with manually set environment variables to link everything together (Python, Pyindigo client, Indigo lib, Indigo drivers)?
+- `enable_blob_mode` — how to use it and do I need to worry about it?
+- Agent devices — do they require any extra handling by this client, or this will be entirely on end-users?
+- Config property and file — how does it work? When I worked with ZWO camera, it refused to connect unless I manually created file and copied contents from elsewhere? Does this property require any extra care or this behaviour is device-specific?
+- What license should I use for distribution?
