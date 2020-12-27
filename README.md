@@ -44,7 +44,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/usr/local/lib"
 5. Run the example to get started!
 
 ```bash
-python examples/basic_core_usage.py
+python examples/basic_usage.py
+python examples/models_usage.py
 ```
 
 ## Usage
@@ -59,7 +60,10 @@ python examples/basic_core_usage.py
   - `pyindigo.core.dispatching_callback` module provides mechanism to set [callback](#listening-for-property-definitionupdatedeletion) that will be invoked on property definition/update/deletion.
   - `pyindigo.core.enums` module provides Python Enum classes modelling enumerations used in Indigo (log level, driver action, etc)
 - `pyindigo.enums` module exposes Indigo-related Enum classes for convenience
-- (WIP) `pyindigo.models` — object-oriented wrappers around Indigo functions
+- `pyindigo.models` — object-oriented wrappers around Indigo functions for more idiomatic and convinient usage
+  - `pyindigo.models.client` — "god-object" in the form of Python module, represents the whole Indigo client, keeps track of attached drivers and devices defined by them; also takes care of setup/cleanup
+  - `pyindigo.models.driver` — defines class for Indigo driver, currently handles only attachment/detachment, but in future will be used to distinguish between local and remote drivers
+  - `pyindigo.models.device` — defines class for Indigo device. It is not instantiated by user, but by callback, when Indigo defines the device. Allows for properties and callbacks, directly linked to specific device.
 
 
 ### Properties

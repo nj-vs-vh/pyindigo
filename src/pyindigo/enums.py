@@ -5,7 +5,7 @@ from .core.properties.attribute_enums import IndigoPropertyPerm, IndigoPropertyS
 
 from .core.enums import IndigoDriverAction, IndigoLogLevel
 
-from .device import IndigoDeviceStatus
+from .models.device import IndigoDeviceStatus
 
 
 __all__ = [

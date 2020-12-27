@@ -2,25 +2,41 @@
 
 import atexit
 
-from .core import setup_client, cleanup_client
+from ..core import setup_client, cleanup_client
 
 
 setup_client()
 
 
-loaded_drivers = []
-known_devices = set()
-
+drivers = set()
 
 def register_driver(driver):
-    loaded_drivers.append(driver)
-    known_devices.update(driver.devices)
+    drivers.add(driver)
 
 
-def detach_all_drivers_and_cleanup():
-    for driver in loaded_drivers:
+devices = set()
+
+def register_device(device):
+    devices.add(device)
+
+
+def cleanup():
+    for device in devices:
+        device.disconnect()
+    for driver in drivers:
         driver.detach()
     cleanup_client()
 
 
-atexit.register(detach_all_drivers_and_cleanup)
+def find_device(name: str):
+    for equal in (lambda s1, s2: s1.lower() == s2.lower(), lambda s1, s2: s2.lower().startswith(s1.lower())):
+        for device in devices:
+            if equal(name, device.name):
+                return(device)
+    else:
+        raise ValueError(
+            f"No '{name}' device found, available devices are\n\t{'; '.join(dev.name for dev in devices)}"
+        )
+
+
+atexit.register(cleanup)
