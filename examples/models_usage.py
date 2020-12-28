@@ -4,7 +4,11 @@ from pyindigo.models.driver import IndigoDriver
 import pyindigo.models.client as client
 
 from pyindigo.core.properties import CCDSpecificProperties, BlobVectorProperty
-from pyindigo.enums import IndigoDriverAction, IndigoPropertyState
+
+from pyindigo.enums import IndigoDriverAction, IndigoPropertyState, IndigoLogLevel
+
+import pyindigo.core as indigo
+indigo.set_indigo_log_level(IndigoLogLevel.DEBUG)
 
 import pyindigo.logging as logging
 logging.pyindigoConfig(False)
@@ -12,9 +16,11 @@ logging.basicConfig(level=logging.INFO)
 
 
 driver = IndigoDriver('indigo_ccd_simulator')
-driver.attach()  # will be detached automatically on exit
+driver.attach()  # will be detached automatically on exit or can be detached manually driver.detach()
 
-time.sleep(0.5)  # time for device to be defined and registered
+time.sleep(1)  # time for device to be defined and registered
+
+print(driver)
 
 simulator = client.find_device('CCD Imager Simulator')
 
@@ -23,7 +29,7 @@ print(f"taking picture with {simulator}")
 
 @simulator.callback(
     accepts={
-        'name': 'CCD1',  # probably a bug in CCD Simulator, should be CCD_IMAGE
+        'name': CCDSpecificProperties.CCD_IMAGE.property_name,
         'state': IndigoPropertyState.OK,
         'property_class': BlobVectorProperty
     }
@@ -31,7 +37,7 @@ print(f"taking picture with {simulator}")
 def save_fits(action: IndigoDriverAction, prop: BlobVectorProperty):
     print("writing picture to test.fits")
     with open('test.fits', 'wb') as f:
-        f.write(prop.items_dict['CCD1'])  # should be IMAGE
+        f.write(prop.items_dict[CCDSpecificProperties.CCD_IMAGE.allowed_item_names[0]])  # should be IMAGE
     print("success!")
 
 simulator.set_property(CCDSpecificProperties.CCD_EXPOSURE, EXPOSURE=5)

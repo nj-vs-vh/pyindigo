@@ -118,7 +118,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
     PyObject* property_object = PyObject_CallFunction(
         PropertyClass,
         "ssii",
-        property->device, indigo_property_name(device->version, property), property->state, property->perm
+        property->device, indigo_property_name(INDIGO_VERSION_CURRENT, property), property->state, property->perm
     );
 
     switch (property->type) {
@@ -127,7 +127,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
                     property_object, "add_item", "ss",
-                    indigo_item_name(device->version, property, item),
+                    indigo_item_name(INDIGO_VERSION_CURRENT, property, item),
                     item->text.value
                 );
             }
@@ -137,7 +137,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
                     property_object, "add_item", "sdsdddd",
-                    indigo_item_name(device->version, property, item),
+                    indigo_item_name(INDIGO_VERSION_CURRENT, property, item),
                     item->number.value,
                     item->number.format,
                     item->number.min,
@@ -153,7 +153,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
                     property_object, "add_item", "si",
-                    indigo_item_name(device->version, property, item),
+                    indigo_item_name(INDIGO_VERSION_CURRENT, property, item),
                     item->sw.value
                 );
             }
@@ -163,7 +163,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
                     property_object, "add_item", "si",
-                    indigo_item_name(device->version, property, item),
+                    indigo_item_name(INDIGO_VERSION_CURRENT, property, item),
                     item->light.value
                 );
             }
@@ -173,7 +173,7 @@ void call_dispatching_callback(const char* action_type, indigo_device *device, i
                 indigo_item *item = &property->items[i];
                 PyObject_CallMethod(
                     property_object, "add_item", "sy#s",
-                    indigo_item_name(device->version, property, item),
+                    indigo_item_name(INDIGO_VERSION_CURRENT, property, item),
                     item->blob.value, (Py_ssize_t)item->blob.size, item->blob.format
                 );
             }

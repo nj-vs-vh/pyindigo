@@ -11,7 +11,7 @@ TODO: interface-specific properties beyond CCDs (DSLR, focuser, wheel, mount, et
 from dataclasses import dataclass
 from typing import Type, List, Optional, Any
 
-from .properties import IndigoProperty, TextVectorProperty, NumberVectorProperty, SwitchVectorProperty
+from .properties import IndigoProperty, TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, BlobVectorProperty
 from .attribute_enums import IndigoSwitchRule
 
 
@@ -149,6 +149,8 @@ class CCDSpecificProperties(IndigoPropertiesNamespace):
     )
 
     CCD_IMAGE_FILE = PropertySchema('CCD_IMAGE_FILE', TextVectorProperty, ['FILE'])
+
+    CCD_IMAGE = PropertySchema('CCD_IMAGE', BlobVectorProperty, ['IMAGE'])
 
     # Depending on hardware this may be a read-only property
     CCD_TEMPERATURE = PropertySchema('CCD_TEMPERATURE', NumberVectorProperty, ['TEMPERATURE'])

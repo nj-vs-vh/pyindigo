@@ -13,18 +13,15 @@ def print_property(action, prop):
 
 # we can also constrain callback to accept only certain properties
 @indigo_callback(accepts={'action': IndigoDriverAction.UPDATE, 'device': 'CCD Imager Simulator'})
-def print_property_colored(action, prop):
-    # some processing happens heere
+def some_other_processing(action, prop):
     pass
 
 
 indigo.setup_client()  # this starts indigo operation
 
-indigo.set_indigo_log_level(IndigoLogLevel.ERROR)
-
 indigo.attach_driver('indigo_ccd_simulator')  # currently only one driver at a time is supported
 
-# sleep 1 sec after every operation to prevent deadlocks and races, giving Indigo time to respond
+# sleep 1 sec after every operation to prevent deadlocks, giving Indigo time to respond
 # this should normally be done with some kind of async callback processing
 time.sleep(1)
 

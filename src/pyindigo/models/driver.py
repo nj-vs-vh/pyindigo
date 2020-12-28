@@ -19,10 +19,13 @@ class IndigoDriver:
         self.driver_lib_name = driver_lib_name
         self.attached = False
 
+    def __str__(self) -> str:
+        return f"{self.driver_lib_name} ({'not' if not self.attached else ''}attached)"
+
     def attach(self):
         attach_driver(self.driver_lib_name)
-        self.attached = True
         register_driver(self)
+        self.attached = True
 
     def detach(self):
         if self.attached:
