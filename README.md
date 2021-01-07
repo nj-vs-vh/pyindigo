@@ -8,9 +8,9 @@
 
 ### Major current limitations
 
-* only one driver at a time is available
-* no remote drivers are yet supported
-* only on Linux
+* only one driver at a time is available (TBD)
+* no remote drivers are yet supported (TBD)
+* works only on Linux
 
 
 ## Installation
@@ -26,7 +26,7 @@ git clone https://github.com/nj-vs-vh/pyindigo.git
 cd pyindigo
 ```
 
-3. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/build/lib`) and set `LD_LIBRARY_PATH` variable to include Indigo libraries.
+1. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/usr/local/lib`).
 
 ```bash
 cd src/pyindigo_client
@@ -48,6 +48,19 @@ python examples/basic_usage.py
 python examples/models_usage.py
 ```
 
+### Uninstall
+
+To uninstall `pyindigo`, you can use following commands form pyindigo directory
+
+```bash
+pip uninstall pyindigo -y
+sudo rm -rf ./build ./dist ./src/pyindigo.egg-info
+cd src/pyindigo_client
+make clean
+```
+
+If you have tweaked source code and want to quickly test it, you can use `dev_reinstall.sh` script.
+
 ## Usage
 
 #### Project structure
@@ -59,7 +72,6 @@ python examples/models_usage.py
   - `pyindigo.core.properties` package provides Python classes modelling [Indigo properties](#properties)
   - `pyindigo.core.dispatching_callback` module provides mechanism to set [callback](#listening-for-property-definitionupdatedeletion) that will be invoked on property definition/update/deletion.
   - `pyindigo.core.enums` module provides Python Enum classes modelling enumerations used in Indigo (log level, driver action, etc)
-- `pyindigo.enums` module exposes Indigo-related Enum classes for convenience
 - `pyindigo.models` — object-oriented wrappers around Indigo functions for more idiomatic and convinient usage
   - `pyindigo.models.client` — "god-object" in the form of Python module, represents the whole Indigo client, keeps track of attached drivers and devices defined by them; also takes care of setup/cleanup
   - `pyindigo.models.driver` — defines class for Indigo driver, currently handles only attachment/detachment, but in future will be used to distinguish between local and remote drivers
@@ -188,16 +200,11 @@ logging.pyindigoConfig(
 - testing with real devices
 - testing (unit tests on modules, integration with CCD Imager Simulator)
 - multidriver mode — C extension upgrade
-- working with remote devices — should be easy, but I haven
+- working with remote devices — should be easy
 - PPA publishing
-- OOP bus-driver-device modelling
-- helper func for 'ensuring property set' — one-time confirmation callback and 'blocking await' with `while True` until callback returns
-- property schemas for the rest of the properties (parse automatically?)
+- property schemas for the rest of the properties (parse tables automatically?)
 - `.pyi` file for core_ext module
 
 ### Open questions:
 - Current installation process assumes that Indigo is installed i.e. all files are copied to `/usr/local/...`. This is not easily portable, and requires modifying system directories with sudo. Is there a better way? Some kind of portable install with manually set environment variables to link everything together (Python, Pyindigo client, Indigo lib, Indigo drivers)?
-- `enable_blob_mode` — how to use it and do I need to worry about it?
-- Agent devices — do they require any extra handling by this client, or this will be entirely on end-users?
-- Config property and file — how does it work? When I worked with ZWO camera, it refused to connect unless I manually created file and copied contents from elsewhere? Does this property require any extra care or this behaviour is device-specific?
-- What license should I use for distribution?
+- `enable_blob_mode` — how to use it and do I need to worry about it? This seems important for remote operation.
