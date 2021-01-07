@@ -166,9 +166,9 @@ indigo_callback(my_callback, accepts={'state': IndigoPropertyState.ALERT})
 
 ### Troubleshooting and logging
 
-Troubleshooting INDIGO app can be painful due to it's asynchronous and multithreading nature. With pyindigo you have several options:
+Troubleshooting INDIGO app can be painful due to it's asynchronous and multithreading nature. With `pyindigo` you have two options:
 
-1. Access native Indigo logs. This sets appropriate flag in C code, logs are passed to stdout and channeled to Python output
+1. Native Indigo logs. This sets appropriate flag in C code, logs are channeled to Python output directly from there:
 
 ```python
 from pyindigo.core import set_indigo_log_level, IndigoLogLevel
@@ -178,7 +178,7 @@ set_indigo_log_level(IndigoLogLevel.DEBUG)
 # 16:15:05.798191 Application: indigo_ccd_simulator: 'CCD Imager Simulator (wheel)' attached
 ```
 
-2. Logging event on Python side with `pyindigo.logging`. This module wraps standard python `logging` module and provides a followind syntax
+1. Logging events on Python side with `pyindigo.logging`. This module wraps standard Python `logging` with additional config option:
 
 ```python
 import pyindigo.logging as logging
