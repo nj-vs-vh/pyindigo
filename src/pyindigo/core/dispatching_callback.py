@@ -8,8 +8,7 @@ from inspect import iscoroutine
 import pyindigo.logging as logging
 
 from .properties import IndigoProperty
-from .properties.attribute_enums import IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
-from .enums import IndigoDriverAction
+from .enums import IndigoDriverAction, IndigoPropertyState, IndigoPropertyPerm, IndigoSwitchRule
 
 
 IndigoCallback = Callable[[IndigoDriverAction, IndigoProperty], None]
@@ -56,7 +55,7 @@ class IndigoCallbackEntry:
         if self.accepts(action, prop):
             if logging.pyindigoConfig.log_callback_dispatching:
                 logging.info(
-                    f"{prop.name} property {action.value} is passed to {self.callback.__name__} "
+                    f"{prop.name} property ({action}d) is passed to {self.callback.__name__} "
                     + f"(defined in {self.callback.__module__})"
                 )
             try:
@@ -148,4 +147,4 @@ def discard_indigo_callback(callback: Callable):
 @indigo_callback(accepts={'state': IndigoPropertyState.ALERT})
 def log_alert_props(action, prop):
     if logging.pyindigoConfig.log_alert_properties:
-        logging.warning(f'\n! ALERT property !\n{action}: {prop}')
+        logging.info(f'\nALERT property encountered:\n{action}: {prop}')

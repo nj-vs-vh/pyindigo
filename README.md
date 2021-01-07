@@ -152,6 +152,38 @@ Finally, when using `indigo_callback` as a decorator, callback is registered at 
 indigo_callback(my_callback, accepts={'state': IndigoPropertyState.ALERT})
 ```
 
+### Troubleshooting and logging
+
+Troubleshooting INDIGO app can be painful due to it's asynchronous and multithreading nature. With pyindigo you have several options:
+
+1. Access native Indigo logs. This sets appropriate flag in C code, logs are passed to stdout and channeled to Python output
+
+```python
+from pyindigo.core import set_indigo_log_level, IndigoLogLevel
+set_indigo_log_level(IndigoLogLevel.DEBUG)
+
+# example log: 
+# 16:15:05.798191 Application: indigo_ccd_simulator: 'CCD Imager Simulator (wheel)' attached
+```
+
+2. Logging event on Python side with `pyindigo.logging`. This module wraps standard python `logging` module and provides a followind syntax
+
+```python
+import pyindigo.logging as logging
+# how you would use standart logging module to log to file:
+logging.basicConfig(filename='pyindigo.log', level=logging.DEBUG)
+
+# additional options:
+logging.pyindigoConfig(
+    log_driver_actions=True,  # log every property on every action coming through dispatching callback (INFO level, False be default)
+    log_property_set=True,  # log every property set by Python client (INFO level, False be default)
+    log_callback_dispatching=True,  # which property goes to which callback function (INFO level, False be default)
+    log_device_connection=True,  # device connection log for pyindigo.models.device (INFO level, False be default)
+    log_alert_properties=True,  # like log_driver_actions, but only for alert state (INFO level, False be default)
+    lop_callback_exceptions=True  # log exceptions in indigo callbacks (WARNING level, True be default)
+)
+```
+
 ## TODO:
 - testing with real devices
 - testing (unit tests on modules, integration with CCD Imager Simulator)

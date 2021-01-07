@@ -11,7 +11,13 @@ TODO: interface-specific properties beyond CCDs (DSLR, focuser, wheel, mount, et
 from dataclasses import dataclass
 from typing import Type, List, Optional, Any
 
-from .properties import IndigoProperty, TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, BlobVectorProperty
+from .properties import (
+    IndigoProperty,
+    TextVectorProperty,
+    NumberVectorProperty,
+    SwitchVectorProperty,
+    BlobVectorProperty,
+)
 from .attribute_enums import IndigoSwitchRule
 
 
@@ -61,6 +67,20 @@ class CommonProperties(IndigoPropertiesNamespace):
 
     CONNECTION = PropertySchema(
         'CONNECTION', SwitchVectorProperty, ['CONNECTED', 'DISCONNECTED'], rule=IndigoSwitchRule.EXACTLY_ONE
+    )
+
+    INFO = PropertySchema(
+        'INFO', TextVectorProperty, [
+            'DEVICE_NAME',
+            'DEVICE_VERSION',
+            'DEVICE_INTERFACE',
+            'FRAMEWORK_NAME',
+            'FRAMEWORK_VERSION',
+            'DEVICE_MODEL',
+            'DEVICE_FIRMWARE_REVISION',
+            'DEVICE_HARDWARE_REVISION',
+            'DEVICE_SERIAL_NUMBER'
+        ],
     )
 
     SIMULATION = PropertySchema(

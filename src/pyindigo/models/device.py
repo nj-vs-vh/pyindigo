@@ -11,20 +11,11 @@ from ..core.enums import IndigoDriverAction
 from ..core.dispatching_callback import indigo_callback
 from ..utils import set_property_with_confirmation
 
-from .client import register_device
-
 
 class IndigoDeviceStatus(Enum):
     DISCONNECTED = auto()
     CONNECTED = auto()
     FAILED = auto()
-
-
-@indigo_callback(
-    accepts={'action': IndigoDriverAction.DEFINE, 'name': 'DRIVER_INFO', 'state': IndigoPropertyState.OK}
-)
-def register_device_callback(_, prop: IndigoProperty):
-    register_device(IndigoDevice.from_driver_info_property(prop))
 
 
 class IndigoDevice:
@@ -39,7 +30,7 @@ class IndigoDevice:
         )
         def connection_status_update(action: IndigoDriverAction, prop: IndigoProperty):
             if prop.state is IndigoPropertyState.OK:
-                if prop.items_dict['CONNECT']:
+                if prop.items_dict['CONNECTED']:
                     self.status = IndigoDeviceStatus.CONNECTED
                 else:
                     self.status = IndigoDeviceStatus.DISCONNECTED
@@ -52,11 +43,11 @@ class IndigoDevice:
         return f"{self.name} ({self.version})"
 
     @classmethod
-    def from_driver_info_property(cls, prop: TextVectorProperty):
-        if prop.name != 'DRIVER_INFO':  # TODO:  use schemas for all properties!
-            raise ValueError(f"Not a DRIVER_INFO property: {prop}")
+    def from_info_property(cls, prop: TextVectorProperty):
+        if prop.name != CommonProperties.INFO.property_name:  # TODO:  use schemas for all properties!
+            raise ValueError(f"Not an INFO property: {prop}")
         items = prop.items_dict
-        return cls(name=items['DRIVER_NAME'], version=items['DRIVER_VERSION'], interface=items['DRIVER_INTERFACE'])
+        return cls(name=items['DEVICE_NAME'], version=items['DEVICE_VERSION'], interface=items['DEVICE_INTERFACE'])
 
     def connect(self, blocking: bool = False, timeout: Optional[float] = None):
         if logging.pyindigoConfig.log_device_connection:

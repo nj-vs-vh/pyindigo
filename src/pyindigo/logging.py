@@ -22,10 +22,12 @@ class pyindigoConfig:
     log_driver_actions: bool = False
     log_callback_dispatching: bool = False
     log_device_connection: bool = False
+    log_blocking_property_settings: bool = False
     # warnings
     lop_callback_exceptions: bool = True
     log_alert_properties: bool = False
 
+    # this seems overengineered and does not allow intellisensing logging options, need to find a better way
     def __new__(cls, *args, **kwargs):
         """Not an actual instantiation, but setting class attributes, mocking logging.basicConfig behaviour"""
         if len(args) == 1 and isinstance(args[0], bool):

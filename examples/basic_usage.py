@@ -4,12 +4,13 @@ import pyindigo.core as indigo
 
 from pyindigo.core.properties import CommonProperties, CCDSpecificProperties
 from pyindigo.core import indigo_callback
-from pyindigo.enums import IndigoDriverAction, IndigoLogLevel
+from pyindigo.core.enums import IndigoDriverAction, IndigoLogLevel
 
 
 @indigo_callback
 def print_property(action, prop):
-    print(f"{action.value}: {prop}")
+    print(f"{action}: {prop}")
+
 
 # we can also constrain callback to accept only certain properties
 @indigo_callback(accepts={'action': IndigoDriverAction.UPDATE, 'device': 'CCD Imager Simulator'})
@@ -18,7 +19,7 @@ def some_other_processing(action, prop):
 
 
 indigo.setup_client()  # this starts indigo operation
-
+indigo.set_indigo_log_level(IndigoLogLevel.INFO)
 indigo.attach_driver('indigo_ccd_simulator')  # currently only one driver at a time is supported
 
 # sleep 1 sec after every operation to prevent deadlocks, giving Indigo time to respond
