@@ -1,3 +1,5 @@
+[![License](http://img.shields.io/badge/INDIGO-license-red.svg)](https://github.com/indigo-astronomy/indigo/blob/master/LICENSE.md)
+
 # pyindigo — Python interface for INDIGO
 
 [INDIGO](https://github.com/indigo-astronomy/indigo) is a framework for multiplatform and distributed astronomy software development. `pyindigo` is a Python package that lets Python interpreter play the role of Indigo client, that is to control Indigo-compatible devices by exchanging messages over Indigo software bus. To learn about Indigo architecture and basic concepts please refer to [documentation](https://github.com/indigo-astronomy/indigo/tree/master/indigo_docs).
