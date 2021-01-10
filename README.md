@@ -28,7 +28,7 @@ git clone https://github.com/nj-vs-vh/pyindigo.git
 cd pyindigo
 ```
 
-1. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/usr/local/lib`).
+3. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/usr/local/lib`).
 
 ```bash
 cd src/pyindigo_client
@@ -107,12 +107,14 @@ from pyindigo.core.properties import CommonProperties, CCDSpecificProperties
 
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator', CONNECTED=True)
 prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPOSURE=3)
+# or just
+prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', 3)  # this works for one-item properties
 ```
 
-Here `CommonProperties`, `CCDSpecificProperties` are namespace classes corresponding to different property tables, `PropertyNamespace.PROP` is a `PropertySchema`, and with its `implement` method `IndigoProperty` instance is created with specified device and items from keyword args. This way of property instantiation prevents typos in property or item names, and results in more readable code.
+Here `CommonProperties`, `CCDSpecificProperties` are "namespace" classes corresponding to different property tables, They contain various schemas, and for each you can use `implement` method to create actual `IndigoProperty` instance with specified target device and items (from keyword args). Property schemas are smart enough to raise an exception if you use inappropriate item names. This way of property instantiation results in readable code without magic string constants.
 
 Only `CommonProperties` and `CCDSpecificProperties` namespaces are available by now, others are WIP.
-v
+
 #### Property setting
 
 To send updated or newly created property to driver, `IndigoProperty.set()` method is used. It wraps C extension function that converts Python object fields to native C data types and calls appropriate Indigo function (i.e. `indigo_change_text_property`). Using property from the previous example, to change CCD device's `CCD_EXPOSURE` property (i.e. request shot exposure of 3 seconds), one would write:
