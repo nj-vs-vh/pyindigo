@@ -25,12 +25,10 @@ class IndigoDevice:
         self.interface = interface
         self.status = IndigoDeviceStatus.DISCONNECTED
 
-        @self.callback(
-            accepts={'action': IndigoDriverAction.UPDATE, 'name': CommonProperties.CONNECTION.property_name}
-        )
+        @self.callback(accepts={"action": IndigoDriverAction.UPDATE, "name": CommonProperties.CONNECTION.property_name})
         def connection_status_update(action: IndigoDriverAction, prop: IndigoProperty):
             if prop.state is IndigoPropertyState.OK:
-                if prop.items_dict['CONNECTED']:
+                if prop.items_dict["CONNECTED"]:
                     self.status = IndigoDeviceStatus.CONNECTED
                 else:
                     self.status = IndigoDeviceStatus.DISCONNECTED
@@ -47,7 +45,7 @@ class IndigoDevice:
         if prop.name != CommonProperties.INFO.property_name:  # TODO:  use schemas for all properties!
             raise ValueError(f"Not an INFO property: {prop}")
         items = prop.items_dict
-        return cls(name=items['DEVICE_NAME'], version=items['DEVICE_VERSION'], interface=items['DEVICE_INTERFACE'])
+        return cls(name=items["DEVICE_NAME"], version=items["DEVICE_VERSION"], interface=items["DEVICE_INTERFACE"])
 
     def connect(self, blocking: bool = False, timeout: Optional[float] = None):
         if logging.pyindigoConfig.log_device_connection:
@@ -56,7 +54,7 @@ class IndigoDevice:
             prop=CommonProperties.CONNECTION.implement(self.name, CONNECTED=True),
             confirmation=lambda: self.status is IndigoDeviceStatus.CONNECTED,
             blocking=blocking,
-            timeout=timeout
+            timeout=timeout,
         )
 
     def disconnect(self, blocking: bool = False, timeout: Optional[float] = None):
@@ -66,14 +64,16 @@ class IndigoDevice:
             prop=CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
             confirmation=lambda: self.status is IndigoDeviceStatus.DISCONNECTED,
             blocking=blocking,
-            timeout=timeout
+            timeout=timeout,
         )
 
     def set_property(self, schema: PropertySchema, *args, **kwargs):
-        schema.implement(device=self.name, *args, **kwargs).set()
+        if "device" in kwargs:
+            raise ValueError("Deviced cannot be set explicitly when using set_property method")
+        schema.implement(self.name, *args, **kwargs).set()
 
     def callback(self, *args, **kwargs):
         """indigo_callback decorator for a specific device"""
-        accepts: Dict[str, Any] = kwargs.get('accepts', {})
-        accepts.update({'device': self.name})
+        accepts: Dict[str, Any] = kwargs.get("accepts", {})
+        accepts.update({"device": self.name})
         return indigo_callback(*args, **kwargs)
