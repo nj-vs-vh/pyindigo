@@ -25,7 +25,12 @@ class IndigoDevice:
         self.interface = interface
         self.status = IndigoDeviceStatus.DISCONNECTED
 
-        @self.callback(accepts={"action": IndigoDriverAction.UPDATE, "name": CommonProperties.CONNECTION.property_name})
+        @self.callback(
+            accepts={
+                "action": IndigoDriverAction.UPDATE,
+                "name": CommonProperties.CONNECTION.property_name,
+            }
+        )
         def connection_status_update(action: IndigoDriverAction, prop: IndigoProperty):
             if prop.state is IndigoPropertyState.OK:
                 if prop.items_dict["CONNECTED"]:
@@ -42,10 +47,16 @@ class IndigoDevice:
 
     @classmethod
     def from_info_property(cls, prop: TextVectorProperty):
-        if prop.name != CommonProperties.INFO.property_name:  # TODO:  use schemas for all properties!
+        if (
+            prop.name != CommonProperties.INFO.property_name
+        ):  # TODO:  use schemas for all properties!
             raise ValueError(f"Not an INFO property: {prop}")
         items = prop.items_dict
-        return cls(name=items["DEVICE_NAME"], version=items["DEVICE_VERSION"], interface=items["DEVICE_INTERFACE"])
+        return cls(
+            name=items["DEVICE_NAME"],
+            version=items["DEVICE_VERSION"],
+            interface=items["DEVICE_INTERFACE"],
+        )
 
     def connect(self, blocking: bool = False, timeout: Optional[float] = None):
         if logging.pyindigoConfig.log_device_connection:

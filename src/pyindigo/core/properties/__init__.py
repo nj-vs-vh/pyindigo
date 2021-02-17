@@ -4,20 +4,19 @@ from .properties import (
     NumberVectorProperty,
     SwitchVectorProperty,
     LightVectorProperty,
-    BlobVectorProperty
+    BlobVectorProperty,
 )
 
 from .schemas import CommonProperties, CCDSpecificProperties
 
 
 __all__ = [
-    'IndigoProperty',  # for use in type annotations
-    'TextVectorProperty',
-    'NumberVectorProperty',
-    'SwitchVectorProperty',
-    'LightVectorProperty',
-    'BlobVectorProperty',
-
-    'CommonProperties',
-    'CCDSpecificProperties'
+    "IndigoProperty",  # for use in type annotations
+    "TextVectorProperty",
+    "NumberVectorProperty",
+    "SwitchVectorProperty",
+    "LightVectorProperty",
+    "BlobVectorProperty",
+    "CommonProperties",
+    "CCDSpecificProperties",
 ]

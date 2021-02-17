@@ -17,6 +17,7 @@ from ..core_ext import set_property
 @dataclass(repr=False)
 class IndigoProperty(ABC):
     """Base class for all Indigo properties, concrete classes must specify item_type"""
+
     device: str
     name: str
     state: Optional[IndigoPropertyState] = None
@@ -43,8 +44,8 @@ class IndigoProperty(ABC):
         )
 
     def __str__(self):
-        items_repr = '\n'.join('\t' + str(item) for item in self.items)
-        return repr(self) + (f'\n\titems:\n{items_repr}' if items_repr else '')
+        items_repr = "\n".join("\t" + str(item) for item in self.items)
+        return repr(self) + (f"\n\titems:\n{items_repr}" if items_repr else "")
 
     @property
     def items_dict(self):
@@ -57,9 +58,11 @@ class IndigoProperty(ABC):
         if logging.pyindigoConfig.log_property_set:
             logging.info(f"Setting property: {self}")
         set_property(
-            self.device, self.name, self.__class__,
+            self.device,
+            self.name,
+            self.__class__,
             [item.name for item in self.items],
-            [item.value for item in self.items]
+            [item.value for item in self.items],
         )
 
 
@@ -82,12 +85,12 @@ class SwitchVectorProperty(IndigoProperty):
         self.rule = IndigoSwitchRule(rule_int)
 
     def __str__(self):
-        on_item_names = ', '.join(item.name for item in self.items if item.value)
-        off_item_names = ', '.join(item.name for item in self.items if not item.value)
+        on_item_names = ", ".join(item.name for item in self.items if item.value)
+        off_item_names = ", ".join(item.name for item in self.items if not item.value)
         return (
             repr(self)
-            + ('\n\tOn: ' + on_item_names if on_item_names else '')
-            + ('\n\tOff: ' + off_item_names if off_item_names else '')
+            + ("\n\tOn: " + on_item_names if on_item_names else "")
+            + ("\n\tOff: " + off_item_names if off_item_names else "")
         )
 
 

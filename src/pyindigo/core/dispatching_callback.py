@@ -17,6 +17,7 @@ IndigoCallback = Callable[[IndigoDriverAction, IndigoProperty], None]
 @dataclass
 class IndigoCallbackEntry:
     """Callback + info on when and how to run it"""
+
     callback: IndigoCallback
 
     action: Optional[IndigoDriverAction] = None
@@ -37,7 +38,9 @@ class IndigoCallbackEntry:
         if iscoroutine(self.callback) and self.loop is None:
             raise ValueError("loop parameter must be specified when registering coroutines!")
         if not iscoroutine(self.callback) and self.loop is not None:
-            logging.warning("loop parameter is specified, but registered callable is not a coroutine!")
+            logging.warning(
+                "loop parameter is specified, but registered callable is not a coroutine!"
+            )
 
     def accepts(self, action: IndigoDriverAction, prop: IndigoProperty) -> bool:
         if self.action is not None and action is not self.action:
@@ -67,7 +70,7 @@ class IndigoCallbackEntry:
                 if logging.pyindigoConfig.lop_callback_exceptions:
                     logging.warning(
                         f"Error in callback {self.callback.__name__} (defined in {self.callback.__module__}):\n"
-                        + f'{type(e).__name__}: {e}'
+                        + f"{type(e).__name__}: {e}"
                     )
             finally:
                 if self.run_times is not None:
@@ -85,16 +88,19 @@ def dispatching_callback(action_string: str, prop: IndigoProperty):
     for i, callback_entry in enumerate(registered_callback_entries):
         callback_entry.run_if_accepted(action, prop)
     registered_callback_entries = [
-        entry for entry in registered_callback_entries if entry.run_times is None or entry.run_times > 0
+        entry
+        for entry in registered_callback_entries
+        if entry.run_times is None or entry.run_times > 0
     ]
 
 
 def indigo_callback(
     callback: Optional[IndigoCallback] = None,
-    /, *,
+    /,
+    *,
     accepts: Optional[Dict[str, Any]] = {},
     run_times: Optional[int] = None,
-    loop: Optional[AbstractEventLoop] = None
+    loop: Optional[AbstractEventLoop] = None,
 ):
     """Main decorator/decorator factory for managing Indigo callbacks.
 
@@ -126,6 +132,7 @@ def indigo_callback(
         run_times specifies how many times callback will be run before being discarded;
         loop, if coroutine is decorated, specifies asyncio loop to run it in.
     """
+
     def decorator(decorated_callback):
         registered_callback_entries.append(
             IndigoCallbackEntry(decorated_callback, **accepts, run_times=run_times, loop=loop)
@@ -141,10 +148,12 @@ def indigo_callback(
 def discard_indigo_callback(callback: Callable):
     """Discard previously registered indigo callback"""
     global registered_callback_entries
-    registered_callback_entries = [entry for entry in registered_callback_entries if entry.callback != callback]
+    registered_callback_entries = [
+        entry for entry in registered_callback_entries if entry.callback != callback
+    ]
 
 
-@indigo_callback(accepts={'state': IndigoPropertyState.ALERT})
+@indigo_callback(accepts={"state": IndigoPropertyState.ALERT})
 def log_alert_props(action, prop):
     if logging.pyindigoConfig.log_alert_properties:
-        logging.info(f'\nALERT property encountered:\n{action}: {prop}')
+        logging.info(f"\nALERT property encountered:\n{action}: {prop}")

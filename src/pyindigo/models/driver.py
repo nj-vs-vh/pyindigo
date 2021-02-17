@@ -7,6 +7,7 @@ class IndigoDriver:
     def __init__(self, driver_lib_name: str):
         # importing here to avoid circular import
         from .client import register_driver
+
         self._register_driver = register_driver
 
         self.driver_lib_name = driver_lib_name
@@ -17,7 +18,8 @@ class IndigoDriver:
 
     def attach(self):
         attach_driver(self.driver_lib_name)
-        self._register_driver(self)  # this line sends attached driver to client for later automatical detachment
+        # this line sends attached driver to client for later automatical detachment
+        self._register_driver(self)
         self.attached = True
 
     def detach(self):

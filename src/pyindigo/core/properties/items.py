@@ -13,6 +13,7 @@ class IndigoItem(ABC):
 
     See also indigo_item enum
     """
+
     name: str
 
 
@@ -27,7 +28,7 @@ class TextItem(IndigoItem):
 @dataclass
 class NumberItem(IndigoItem):
     value: float
-    format: str = r'%g'  # format specifier, see https://en.wikipedia.org/wiki/Printf_format_string#Type_field
+    format: str = r"%g"  # format specifier, see https://en.wikipedia.org/wiki/Printf_format_string#Type_field
     min: Optional[float] = None
     max: Optional[float] = None
     step: Optional[float] = None
@@ -39,15 +40,15 @@ class NumberItem(IndigoItem):
     def __str__(self):
         def dtoa(d: float) -> str:
             try:
-                return ('{' + self.format.replace('%', ':') + '}').format(d)
+                return ("{" + self.format.replace("%", ":") + "}").format(d)
             except Exception:
                 return str(d)
 
         return (
-            f'{self.name} = {dtoa(self.value)}'
-            + f', target {dtoa(self.target)}'
+            f"{self.name} = {dtoa(self.value)}"
+            + f", target {dtoa(self.target)}"
             # representation for interval with step follows Python slice notation [min:max:step]
-            + f', in range [{dtoa(self.min)}:{dtoa(self.max)}:{dtoa(self.step)}]'
+            + f", in range [{dtoa(self.min)}:{dtoa(self.max)}:{dtoa(self.step)}]"
         )
 
 
@@ -60,7 +61,7 @@ class SwitchItem(IndigoItem):
         self.value = bool(self.value)
 
     def __str__(self):
-        return f'{self.name} = {self.value}'
+        return f"{self.name} = {self.value}"
 
 
 @dataclass
@@ -72,7 +73,7 @@ class LightItem(IndigoItem):
         self.value = IndigoPropertyState(self.value)
 
     def __str__(self):
-        return f'{self.name} is in {self.value.name} state'
+        return f"{self.name} is in {self.value.name} state"
 
 
 @dataclass

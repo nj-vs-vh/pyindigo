@@ -6,7 +6,10 @@ import pyindigo.logging as logging
 
 
 def set_property_with_confirmation(
-    prop: IndigoProperty, confirmation: Callable[[], bool], blocking: bool = False, timeout: Optional[float] = None
+    prop: IndigoProperty,
+    confirmation: Callable[[], bool],
+    blocking: bool = False,
+    timeout: Optional[float] = None,
 ):
     if confirmation():
         if logging.pyindigoConfig.log_blocking_property_settings:
@@ -24,7 +27,11 @@ def set_property_with_confirmation(
             waiting_time += waiting_step
             if timeout is not None and waiting_time > timeout:
                 if logging.pyindigoConfig.log_blocking_property_settings:
-                    logging.info(f"set_property_with_confirmation: failed on timeout ({timeout} sec):\n\t{prop}")
+                    logging.info(
+                        f"set_property_with_confirmation: failed on timeout ({timeout} sec):\n\t{prop}"
+                    )
                 return
         if logging.pyindigoConfig.log_blocking_property_settings:
-            logging.info(f"set_property_with_confirmation: success, took ~{waiting_time} sec:\n\t{prop}")
+            logging.info(
+                f"set_property_with_confirmation: success, took ~{waiting_time} sec:\n\t{prop}"
+            )

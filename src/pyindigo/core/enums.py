@@ -6,9 +6,9 @@ from .properties.attribute_enums import IndigoPropertyPerm, IndigoPropertyState,
 
 
 class IndigoDriverAction(Enum):
-    DEFINE = 'define'
-    UPDATE = 'update'
-    DELETE = 'delete'
+    DEFINE = "define"
+    UPDATE = "update"
+    DELETE = "delete"
 
     def __str__(self):
         return self.value
@@ -22,9 +22,9 @@ class IndigoLogLevel(Enum):
 
 
 __all__ = [
-    'IndigoPropertyPerm',
-    'IndigoPropertyState',
-    'IndigoSwitchRule',
-    'IndigoDriverAction',
-    'IndigoLogLevel',
+    "IndigoPropertyPerm",
+    "IndigoPropertyState",
+    "IndigoSwitchRule",
+    "IndigoDriverAction",
+    "IndigoLogLevel",
 ]

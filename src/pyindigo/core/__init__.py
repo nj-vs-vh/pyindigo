@@ -17,15 +17,31 @@ from .core_ext import setup_client, cleanup_client, attach_driver, detach_driver
 # setting up links to pyindigo.core objects and functions in core_ext...
 
 from .core_ext import set_property_classes as _set_property_classes
-from .properties.properties import TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty
-_set_property_classes(TextVectorProperty, NumberVectorProperty, SwitchVectorProperty, LightVectorProperty, BlobVectorProperty)
+from .properties.properties import (
+    TextVectorProperty,
+    NumberVectorProperty,
+    SwitchVectorProperty,
+    LightVectorProperty,
+    BlobVectorProperty,
+)
+
+_set_property_classes(
+    TextVectorProperty,
+    NumberVectorProperty,
+    SwitchVectorProperty,
+    LightVectorProperty,
+    BlobVectorProperty,
+)
 
 from .core_ext import set_dispatching_callback as _set_dispatching_callback
 from .dispatching_callback import dispatching_callback
+
 _set_dispatching_callback(dispatching_callback)
 
 from .core_ext import set_log_level as _set_log_level
 from .enums import IndigoLogLevel
+
+
 def set_indigo_log_level(log_level: IndigoLogLevel = IndigoLogLevel.ERROR):
     _set_log_level(log_level.value)
 
@@ -35,13 +51,11 @@ from .dispatching_callback import indigo_callback
 
 # not necessary but used for linting purposes
 __all__ = [
-    'set_indigo_log_level',
-
-    'setup_client',
-    'cleanup_client',
-    'attach_driver',
-    'detach_driver',
-    'disconnect_device',
-
-    'indigo_callback'
+    "set_indigo_log_level",
+    "setup_client",
+    "cleanup_client",
+    "attach_driver",
+    "detach_driver",
+    "disconnect_device",
+    "indigo_callback",
 ]
