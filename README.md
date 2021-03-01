@@ -99,16 +99,25 @@ Rule, state, and permission property attributes are stored as enumerations in C 
 
 #### Property schemas
 
-Properties can be instantiated from Python code directly, but it requires copy-pasting property and item names, as `add_item` and `add_rule` methods are intended to be called from C extension code, not high-level Python code. To create properties conviniently and idiomatically, `PropertySchema` objects can be used. These are helper objects defined in [`pyindigo.core.properties.schemas`](https://github.com/nj-vs-vh/pyindigo/blob/main/src/pyindigo/core/properties/schemas.py), that store information from [property tables](https://github.com/indigo-astronomy/indigo/blob/master/indigo_docs/PROPERTIES.md) in a convenient, ready-to-use way. Example:
+Properties can be instantiated from Python code directly, but it requires copy-pasting property and item names, as `add_item` and `add_rule` methods are internal methods not to be called from user-level code. To create properties conviniently and idiomatically, `PropertySchema` objects can be used. These are helper objects defined in [`pyindigo.core.properties.schemas`](https://github.com/nj-vs-vh/pyindigo/blob/main/src/pyindigo/core/properties/schemas.py), that store information from [property tables](https://github.com/indigo-astronomy/indigo/blob/master/indigo_docs/PROPERTIES.md) in a convenient, ready-to-use way. Example:
 
 ```python
 # namespace classes
 from pyindigo.core.properties import CommonProperties, CCDSpecificProperties
+# helper class
+from pyindigo.core.properties import UserDefinedItem
 
+# the most common way: keyword arguments, simple and intuitive
 prop = CommonProperties.CONNECTION.implement('CCD Imager Simulator', CONNECTED=True)
 prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPOSURE=3)
-# or just
-prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', 3)  # this works for one-item properties
+# or like that, when a property has a single item and it's name is obvious
+prop = CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', 3)
+# or like that, when item name cannot fit in a python keyword
+prop = CCDSpecificProperties.CCD_EXPOSURE.implement(
+    'CCD Imager Simulator',
+    UserDefinedItem("Some device-specific item", True),
+    UserDefinedItem("Some other device-specific item", False),
+)
 ```
 
 Here `CommonProperties`, `CCDSpecificProperties` are "namespace" classes corresponding to different property tables, They contain various schemas, and for each you can use `implement` method to create actual `IndigoProperty` instance with specified target device and items (from keyword args). Property schemas are smart enough to raise an exception if you use inappropriate item names. This way of property instantiation results in readable code without magic string constants.
@@ -168,6 +177,45 @@ Finally, when using `indigo_callback` as a decorator, callback is registered at 
 indigo_callback(my_callback, accepts={'state': IndigoPropertyState.ALERT})
 ```
 
+### Using device and driver classes
+
+Some actions like connecting to device are common and may be abstracted a little bit. In particular, there's `pyindigo.models` subpackage with optional classes providing such abstractions.
+
+Example usage:
+
+```python
+# Indigo thread starts right here at the moment you import anything from models subpackage!
+from pyindigo.models.driver import IndigoDriver
+import pyindigo.models.client as client
+
+from pyindigo.core.properties import CCDSpecificProperties, BlobVectorProperty
+from pyindigo.core.enums import IndigoDriverAction, IndigoPropertyState
+
+# here indigo will attempt to load dynamic driver
+driver = IndigoDriver('indigo_ccd_simulator')
+
+# driver is attached on demand and will be detached automatically on exit
+# (or can be detached manually driver.detach())
+driver.attach()
+
+# client keeps track of all known devices and can find them by name
+simulator = client.find_device('CCD Imager Simulator')
+
+# connecting to device -- blocking=True will prevent program for continuing until confirmation from driver is received
+simulator.connect(blocking=True)
+
+# shortcut to restrict callback to propetries from particular device
+@simulator.callback(
+    accepts={...}
+)
+def some_clbck(action: IndigoDriverAction, prop: BlobVectorProperty):
+    pass
+
+# similar to CCDSpecificProperties.CCD_EXPOSURE.implement('CCD Imager Simulator', EXPOSURE=3).set()
+# but more expressive
+simulator.set_property(CCDSpecificProperties.CCD_EXPOSURE, EXPOSURE=5)
+```
+
 ### Troubleshooting and logging
 
 Troubleshooting INDIGO app can be painful due to it's asynchronous and multithreading nature. With `pyindigo` you have two options:
@@ -182,7 +230,7 @@ set_indigo_log_level(IndigoLogLevel.DEBUG)
 # 16:15:05.798191 Application: indigo_ccd_simulator: 'CCD Imager Simulator (wheel)' attached
 ```
 
-1. Logging events on Python side with `pyindigo.logging`. This module wraps standard Python `logging` with additional config option:
+2. Logging events on Python side with `pyindigo.logging`. This module wraps standard Python `logging` with additional config option:
 
 ```python
 import pyindigo.logging as logging
