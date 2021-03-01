@@ -48,6 +48,11 @@ class PropertySchema:
                     "Single item value argument can only be used for single-item properties, "
                     + f"but {self.property_name} has {len(self.allowed_item_names)} of them"
                 )
+            if not self.allowed_item_names:
+                raise ValueError(
+                    f"Cannot infer a name of an item with passed value {single_item_value} for property "
+                    f"{self.property_name}. Please pass it as a keyword argument."
+                )
             prop.add_item(self.allowed_item_names[0], single_item_value)
         else:
             if not items_kwargs:
