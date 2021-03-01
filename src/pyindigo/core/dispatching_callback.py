@@ -3,7 +3,7 @@
 from dataclasses import dataclass, fields
 from typing import Optional, Callable, List, Dict, Any, Type
 from asyncio import AbstractEventLoop, run_coroutine_threadsafe
-from inspect import iscoroutine
+from inspect import iscoroutinefunction
 
 import pyindigo.logging as logging
 
@@ -35,9 +35,9 @@ class IndigoCallbackEntry:
     def __post_init__(self):
         if not callable(self.callback):
             raise RuntimeError(f"Unable to register {self.callback} - not a callable!")
-        if iscoroutine(self.callback) and self.loop is None:
+        if iscoroutinefunction(self.callback) and self.loop is None:
             raise ValueError("loop parameter must be specified when registering coroutines!")
-        if not iscoroutine(self.callback) and self.loop is not None:
+        if not iscoroutinefunction(self.callback) and self.loop is not None:
             logging.warning(
                 "loop parameter is specified, but registered callable is not a coroutine!"
             )
@@ -62,7 +62,7 @@ class IndigoCallbackEntry:
                     + f"(defined in {self.callback.__module__})"
                 )
             try:
-                if iscoroutine(self.callback):
+                if iscoroutinefunction(self.callback):
                     run_coroutine_threadsafe(self.callback(action, prop), self.loop)
                 else:
                     self.callback(action, prop)
