@@ -72,7 +72,7 @@ class PropertySchema:
                     items_to_add = list(args)
 
         for ud_item in items_to_add:
-            if ud_item.item_name in self.allowed_item_names:
+            if not self.allowed_item_names or ud_item.item_name in self.allowed_item_names:
                 prop.add_item(ud_item.item_name, ud_item.item_value)
             else:
                 raise KeyError(
