@@ -22,15 +22,19 @@ from .attribute_enums import IndigoSwitchRule
 
 
 @dataclass
+class UserDefinedItem:
+    item_name: str
+    item_value: Any
+
+
+@dataclass
 class PropertySchema:
     property_name: str
     property_class: Type[IndigoProperty]
     allowed_item_names: List[str]  # empty list means any item name is accepted
     rule: Optional[IndigoSwitchRule] = None
 
-    def implement(
-        self, device: str, single_item_value: Optional[Any] = None, **items_kwargs
-    ) -> IndigoProperty:
+    def implement(self, device: str, *args, **items_kwargs) -> IndigoProperty:
         """Use schema to create property ready for setting
 
         Property items must be specified with keyword arguments ITEM_NAME='item_value' or,
@@ -38,30 +42,43 @@ class PropertySchema:
         prop = self.property_class(device=device, name=self.property_name)
         if self.rule and self.property_class is SwitchVectorProperty:
             prop.add_rule(self.rule)
-        if single_item_value is not None:
-            if items_kwargs:
-                raise ValueError(
-                    "Single item value and items keyword args cannot be used together!"
-                )
-            if len(self.allowed_item_names) > 1:
-                raise ValueError(
-                    "Single item value argument can only be used for single-item properties, "
-                    + f"but {self.property_name} has {len(self.allowed_item_names)} of them"
-                )
-            if not self.allowed_item_names:
-                raise ValueError(
-                    f"Cannot infer a name of an item with passed value {single_item_value} for property "
-                    f"{self.property_name}. Please pass it as a keyword argument."
-                )
-            prop.add_item(self.allowed_item_names[0], single_item_value)
-        else:
+        if not args:
             if not items_kwargs:
-                raise ValueError("At least one item must be specified!")
-            for item_name, item_value in items_kwargs.items():
-                if item_name in self.allowed_item_names or len(self.allowed_item_names) == 0:
-                    prop.add_item(item_name, item_value)
-                else:
-                    raise KeyError(f"Property {self.property_name} doesn't have {item_name} item!")
+                raise ValueError("No items passed!")
+            items_to_add: List[UserDefinedItem] = [
+                UserDefinedItem(item_name, item_value)
+                for item_name, item_value in items_kwargs.items()
+            ]
+        else:
+            if items_kwargs:
+                raise ValueError("Item args and keyword args cannot be used together")
+            if len(args) == 1 and not isinstance(
+                args[0], UserDefinedItem
+            ):  # inferring single item by value only
+                if len(self.allowed_item_names) > 1:
+                    raise ValueError(
+                        "Ambiguous property: cannot use single item value's name. "
+                        + f"Available item names: {self.allowed_item_names}"
+                    )
+                if not self.allowed_item_names:
+                    raise ValueError(
+                        f"Cannot infer item names for {self.property_name} property. Pass it as a keyword argument."
+                    )
+                items_to_add = [UserDefinedItem(self.allowed_item_names[0], args[0])]
+            else:
+                for arg in args:
+                    if not isinstance(arg, UserDefinedItem):
+                        raise ValueError("All args of 2+ must be instances of UserDefinedItem")
+                    items_to_add = list(args)
+
+        for ud_item in items_to_add:
+            if ud_item.item_name in self.allowed_item_names:
+                prop.add_item(ud_item.item_name, ud_item.item_value)
+            else:
+                raise KeyError(
+                    f"Property {self.property_name} doesn't have {ud_item.item_name} item!"
+                )
+
         return prop
 
 
