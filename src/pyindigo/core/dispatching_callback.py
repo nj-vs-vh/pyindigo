@@ -67,7 +67,7 @@ class IndigoCallbackEntry:
                 else:
                     self.callback(action, prop)
             except Exception as e:
-                if logging.pyindigoConfig.lop_callback_exceptions:
+                if logging.pyindigoConfig.log_callback_exceptions:
                     logging.warning(
                         f"Error in callback {self.callback.__name__} (defined in {self.callback.__module__}):\n"
                         + f"{type(e).__name__}: {e}"

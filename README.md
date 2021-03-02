@@ -244,7 +244,7 @@ logging.pyindigoConfig(
     log_callback_dispatching=True,  # which property goes to which callback function (INFO level, False be default)
     log_device_connection=True,  # device connection log for pyindigo.models.device (INFO level, False be default)
     log_alert_properties=True,  # like log_driver_actions, but only for alert state (INFO level, False be default)
-    lop_callback_exceptions=True  # log exceptions in indigo callbacks (WARNING level, True be default)
+    log_callback_exceptions=True  # log exceptions in indigo callbacks (WARNING level, True be default)
 )
 ```
 

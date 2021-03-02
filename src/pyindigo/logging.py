@@ -24,7 +24,7 @@ class pyindigoConfig:
     log_device_connection: bool = False
     log_blocking_property_settings: bool = False
     # warnings
-    lop_callback_exceptions: bool = True
+    log_callback_exceptions: bool = True
     log_alert_properties: bool = False
 
     # this seems overengineered and does not allow intellisensing logging options, need to find a better way
