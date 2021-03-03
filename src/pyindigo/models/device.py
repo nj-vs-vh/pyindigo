@@ -12,6 +12,10 @@ from ..core.dispatching_callback import indigo_callback
 from ..utils import set_property_with_confirmation
 
 
+class IndigoDeviceException(Exception):
+    pass
+
+
 class IndigoDeviceStatus(Enum):
     DISCONNECTED = auto()
     CONNECTED = auto()
@@ -63,7 +67,8 @@ class IndigoDevice:
             logging.info(f"Connecting {self.name} device...")
         set_property_with_confirmation(
             prop=CommonProperties.CONNECTION.implement(self.name, CONNECTED=True),
-            confirmation=lambda: self.status is IndigoDeviceStatus.CONNECTED,
+            confirmation=lambda: self.status
+            in {IndigoDeviceStatus.CONNECTED, IndigoDeviceStatus.FAILED},
             blocking=blocking,
             timeout=timeout,
         )
@@ -73,7 +78,8 @@ class IndigoDevice:
             logging.info(f"Disconnecting {self.name} device...")
         set_property_with_confirmation(
             prop=CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
-            confirmation=lambda: self.status is IndigoDeviceStatus.DISCONNECTED,
+            confirmation=lambda: self.status
+            is {IndigoDeviceStatus.DISCONNECTED, IndigoDeviceStatus.FAILED},
             blocking=blocking,
             timeout=timeout,
         )
@@ -81,7 +87,12 @@ class IndigoDevice:
     def set_property(self, schema: PropertySchema, *args, **kwargs):
         if "device" in kwargs:
             raise ValueError("Deviced cannot be set explicitly when using set_property method")
-        schema.implement(self.name, *args, **kwargs).set()
+        if self.status is IndigoDeviceStatus.CONNECTED:
+            schema.implement(self.name, *args, **kwargs).set()
+        else:
+            raise IndigoDeviceException(
+                f"Cannot set a property for {self.name} with {self.status.value} status"
+            )
 
     def callback(self, *args, **kwargs):
         """indigo_callback decorator for a specific device"""
