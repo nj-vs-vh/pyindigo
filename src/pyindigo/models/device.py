@@ -79,7 +79,7 @@ class IndigoDevice:
         set_property_with_confirmation(
             prop=CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
             confirmation=lambda: self.status
-            is {IndigoDeviceStatus.DISCONNECTED, IndigoDeviceStatus.FAILED},
+            in {IndigoDeviceStatus.DISCONNECTED, IndigoDeviceStatus.FAILED},
             blocking=blocking,
             timeout=timeout,
         )
