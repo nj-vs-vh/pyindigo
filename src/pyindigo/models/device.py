@@ -67,8 +67,9 @@ class IndigoDevice:
             logging.info(f"Connecting {self.name} device...")
         set_property_with_confirmation(
             prop=CommonProperties.CONNECTION.implement(self.name, CONNECTED=True),
-            confirmation=lambda: self.status
-            in {IndigoDeviceStatus.CONNECTED, IndigoDeviceStatus.FAILED},
+            confirmation=lambda: (
+                self.status in {IndigoDeviceStatus.CONNECTED, IndigoDeviceStatus.FAILED}
+            ),
             blocking=blocking,
             timeout=timeout,
         )
@@ -78,8 +79,9 @@ class IndigoDevice:
             logging.info(f"Disconnecting {self.name} device...")
         set_property_with_confirmation(
             prop=CommonProperties.CONNECTION.implement(self.name, DISCONNECTED=True),
-            confirmation=lambda: self.status
-            in {IndigoDeviceStatus.DISCONNECTED, IndigoDeviceStatus.FAILED},
+            confirmation=lambda: (
+                self.status in {IndigoDeviceStatus.DISCONNECTED, IndigoDeviceStatus.FAILED}
+            ),
             blocking=blocking,
             timeout=timeout,
         )
