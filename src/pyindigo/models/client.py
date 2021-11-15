@@ -59,5 +59,6 @@ def find_device(name: str) -> IndigoDevice:  # noqa
                 return device
     else:
         raise ValueError(
-            f"No '{name}' device found, available devices are: \n\t{'; '.join(dev.name for dev in devices)}"
+            f"No '{name}' device found, available devices are: \n\t"
+            + "; ".join(f"'{dev.name}'" for dev in devices)
         )
