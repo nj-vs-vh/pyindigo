@@ -40,7 +40,7 @@ class PropertySchema:
         Property items must be specified with keyword arguments ITEM_NAME='item_value' or,
         if there's only one item in the property, with single value"""
         prop = self.property_class(device=device, name=self.property_name)
-        if self.rule and self.property_class is SwitchVectorProperty:
+        if self.rule and isinstance(prop, SwitchVectorProperty):
             prop.add_rule(self.rule)
         if not args:
             if not items_kwargs:
@@ -69,7 +69,7 @@ class PropertySchema:
                 for arg in args:
                     if not isinstance(arg, UserDefinedItem):
                         raise ValueError("All args of 2+ must be instances of UserDefinedItem")
-                    items_to_add = list(args)
+                items_to_add = list(args)
 
         for ud_item in items_to_add:
             if not self.allowed_item_names or ud_item.item_name in self.allowed_item_names:

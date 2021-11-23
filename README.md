@@ -19,29 +19,29 @@
 
 1. Prerequisite for this package is Indigo itself. Follow [building instructions](https://github.com/indigo-astronomy/indigo#how-to-build-indigo) for your system, make sure to use `make install` option instead of `make build` to make Indigo available system-wide.
 
-2. Clone this repository
+4. Clone this repository
 
-```bash
-git clone https://github.com/nj-vs-vh/pyindigo.git
-cd pyindigo
-```
+    ```bash
+    git clone https://github.com/nj-vs-vh/pyindigo.git
+    cd pyindigo
+    ```
 
-3. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/usr/local/lib`).
+5. Install `pyindigo_client`. This will copy client's shared library to other indigo shared libraries (`/usr/local/lib`).
 
-```bash
-cd src/pyindigo_client
-make install
-```
+    ```bash
+    cd src/pyindigo_client
+    make install
+    ```
 
-1. Finally, install the Python package. To let Python link with `pyindigo_client` shared lib in runtime, make sure that `LD_LIBRARY_PATH` includes `/usr/local/lib` location.
+6. Finally, install the Python package. To let Python link with `pyindigo_client` shared lib in runtime, make sure that `LD_LIBRARY_PATH` includes `/usr/local/lib` location.
 
-```bash
-cd ../..
-python3 setup.py install
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/usr/local/lib"
-```
+    ```bash
+    cd ../..
+    python3 setup.py install
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/usr/local/lib"
+    ```
 
-5. Run an example to get started!
+7. Run an example to get started!
 
 ```bash
 python examples/basic_usage.py
