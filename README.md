@@ -43,10 +43,10 @@
 
 7. Run an example to get started!
 
-```bash
-python examples/basic_usage.py
-python examples/models_usage.py
-```
+    ```bash
+    python examples/basic_usage.py
+    python examples/models_usage.py
+    ```
 
 ### Uninstall
 
